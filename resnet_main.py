@@ -11,7 +11,6 @@ import numpy as np
 import tensorflow as tf
 
 import custom_ops as ops
-import data_utils_caltech101
 import data_utils_cifar
 import helper_buildLoss
 import helper_utils

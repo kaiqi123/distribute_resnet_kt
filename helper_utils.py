@@ -124,53 +124,11 @@ def compute_cosine_similarity(model, session, train_images, train_labels):
     assert teacherlayers[2][0][0][0][2] == teacher_unit_last_relu[0][0][0][2]
 
 
-def visualize_the_output_of_teacher(model, session, data_loader, step):
-
-    if step == 0 or step == 1:
-
-        train_images, train_labels, original_train_images = data_loader.next_batch_for_visualization()
-
-        teacherGroup11_normFalse, teacherGroup21_normFalse, \
-        teacherGroup31_normFalse, teacherLast_normFalse, \
-        teacherGroup12_normFalse, teacherGroup22_normFalse, \
-        teacherGroup32_normFalse = session.run(
-          [model.teacherGroup11_normFalse, model.teacherGroup21_normFalse,
-           model.teacherGroup31_normFalse, model.teacherLast_normFalse,
-           model.teacherGroup12_normFalse, model.teacherGroup22_normFalse,
-           model.teacherGroup32_normFalse],
-          feed_dict={
-            model.images: train_images,
-            model.labels: train_labels,
-            model.teacher_model.images: train_images,
-            model.teacher_model.labels: train_labels,
-          })
-
-        np.save("output/input_original_images_iteration_"+str(step)+".npy", original_train_images)
-        np.save("output/input_augmented_images_iteration_"+str(step)+".npy", train_images)
-        np.save("output/input_labels_iteration_"+str(step)+".npy", train_labels)
-        np.save("output/teacherGroup11_normFalse_iteration_"+str(step)+".npy", teacherGroup11_normFalse)
-        np.save("output/teacherGroup12_normFalse_iteration_"+str(step)+".npy", teacherGroup12_normFalse)
-        np.save("output/teacherGroup21_normFalse_iteration_"+str(step)+".npy", teacherGroup21_normFalse)
-        np.save("output/teacherGroup22_normFalse_iteration_"+str(step)+".npy", teacherGroup22_normFalse)
-        np.save("output/teacherGroup31_normFalse_iteration_"+str(step)+".npy", teacherGroup31_normFalse)
-        np.save("output/teacherGroup32_normFalse_iteration_"+str(step)+".npy", teacherGroup32_normFalse)
-        np.save("output/teacherLast_normFalse_iteration_"+str(step)+".npy", teacherLast_normFalse)
-
-
-    """
-    count_filter0_num(teacherGroup11_normFalse, "teacherGroup11")
-    count_filter0_num(teacherGroup12_normFalse, "teacherGroup12")
-    count_filter0_num(teacherGroup21_normFalse, "teacherGroup21")
-    count_filter0_num(teacherGroup22_normFalse, "teacherGroup22")
-    count_filter0_num(teacherGroup31_normFalse, "teacherGroup31")
-    count_filter0_num(teacherGroup32_normFalse, "teacherGroup32")
-    count_filter0_num(teacherLast_normFalse, "teacherlast")
-    """
-
 def restore_variables_from_DeCAF_phase1(model, session):
     model_dir_DeCAF = os.path.join(model.hparams.DeCAF_checkpoint_dir, 'model')
     checkpoint_path_DeCAF = tf.train.latest_checkpoint(model_dir_DeCAF)
     model.saverDeCAF.restore(session, checkpoint_path_DeCAF)
+
 
 student_avg_num0filters_dict_toatalEpochs = {"group1_block0_sub1_relu":[], "group1_block0_sub2_relu":[],
                "group2_block0_sub1_relu":[], "group2_block0_sub2_relu":[],
@@ -236,7 +194,6 @@ def run_epoch_training(session, model, data_loader, curr_epoch, summary_writer):
           })
     elif model.type == "independent_student" or model.type == "teacher":
 
-      # DeCAF, restore variables
       #if curr_epoch == 0 and step == 0:
       #    restore_variables_from_DeCAF_phase1(model, session)
 
@@ -248,7 +205,7 @@ def run_epoch_training(session, model, data_loader, curr_epoch, summary_writer):
           })
 
       # analyze output of every layer for pruning
-      avg_num0filters_dict_perEpoch = helper_output_analyze.run_output_list_perIteration(session, model, train_images, train_labels, avg_num0filters_dict_perEpoch)
+      # avg_num0filters_dict_perEpoch = helper_output_analyze.run_output_list_perIteration(session, model, train_images, train_labels, avg_num0filters_dict_perEpoch)
 
     else:
       raise EOFError("Not found model.type when training!")
@@ -264,25 +221,25 @@ def run_epoch_training(session, model, data_loader, curr_epoch, summary_writer):
   tf.logging.info('number of trainable params: {}'.format(model.num_trainable_params))
 
   # analyze output of every layer for pruning
-  if model.type == "independent_student" or model.type == "teacher":
-      if model.type == "independent_student":
-          avg_num0filters_dict_toatalEpochs = student_avg_num0filters_dict_toatalEpochs
-
-      for key, avg_num0filter_everyIteration_perEpoch in sorted(avg_num0filters_dict_perEpoch.items()):
-          if key in avg_num0filters_dict_toatalEpochs.keys():
-              avg_num0filters_dict_toatalEpochs[key].append(np.mean(avg_num0filter_everyIteration_perEpoch))
-
-      save_fileName = "./output_num0filter/"+str(model.hparams.checkpoint_dir).split("/")[2]+".txt"
-      f = open(save_fileName,'w')
-      f.write("Average number of 0 filter activations per epoch\n")
-      f.write("Epoch: {}\n".format(curr_epoch))
-      for key, value in sorted(avg_num0filters_dict_toatalEpochs.items()):
-          assert len(avg_num0filters_dict_toatalEpochs[key]) == curr_epoch + 1
-          f.write("Layer name: {}\n".format(key))
-          f.write(str(value)+"\n")
-          tf.logging.info(key)
-          tf.logging.info(value)
-      f.close()
-      tf.logging.info("Save num0filter to {}".format(save_fileName))
+  # if model.type == "independent_student" or model.type == "teacher":
+  #     if model.type == "independent_student":
+  #         avg_num0filters_dict_toatalEpochs = student_avg_num0filters_dict_toatalEpochs
+  #
+  #     for key, avg_num0filter_everyIteration_perEpoch in sorted(avg_num0filters_dict_perEpoch.items()):
+  #         if key in avg_num0filters_dict_toatalEpochs.keys():
+  #             avg_num0filters_dict_toatalEpochs[key].append(np.mean(avg_num0filter_everyIteration_perEpoch))
+  #
+  #     save_fileName = "./output_num0filter/"+str(model.hparams.checkpoint_dir).split("/")[2]+".txt"
+  #     f = open(save_fileName,'w')
+  #     f.write("Average number of 0 filter activations per epoch\n")
+  #     f.write("Epoch: {}\n".format(curr_epoch))
+  #     for key, value in sorted(avg_num0filters_dict_toatalEpochs.items()):
+  #         assert len(avg_num0filters_dict_toatalEpochs[key]) == curr_epoch + 1
+  #         f.write("Layer name: {}\n".format(key))
+  #         f.write(str(value)+"\n")
+  #         tf.logging.info(key)
+  #         tf.logging.info(value)
+  #     f.close()
+  #     tf.logging.info("Save num0filter to {}".format(save_fileName))
 
   return train_accuracy

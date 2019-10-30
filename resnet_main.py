@@ -143,11 +143,6 @@ class CifarModel(object):
         tf.summary.scalar(self.type + "/accuracy", self.accuracy)
         tf.summary.scalar(self.type + "/loss_with_correctLabel", self.cost)
         tf.summary.scalar(self.teacher_model.type + "/accuracy", self.teacher_model.accuracy)
-        #tf.summary.scalar(self.type + "/loss_init", self.loss_list[0])
-        #tf.summary.scalar(self.type + "/loss_group1", self.loss_list[1])
-        #tf.summary.scalar(self.type + "/loss_group2", self.loss_list[2])
-        #tf.summary.scalar(self.type + "/loss_last_relu", self.loss_list[3])
-        #tf.summary.scalar(self.type + "/loss_fc", self.loss_list[4])
       summary_op = tf.summary.merge_all()
       return summary_op
 

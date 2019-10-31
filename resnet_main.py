@@ -457,12 +457,12 @@ class CifarModelTrainer(object):
         meval.build('eval')
       return m, meval
 
-  def _calc_starting_epoch(self, m):
+  def _calc_starting_epoch(self, m, server):
     """Calculates the starting epoch for model m based on global step."""
     hparams = self.hparams
     batch_size = hparams.batch_size
     steps_per_epoch = int(hparams.train_size / batch_size)
-    with self._new_session(m):
+    with self._new_session(m, server):
       curr_step = self.session.run(m.global_step)
     total_steps = steps_per_epoch * hparams.num_epochs
     epochs_left = (total_steps - curr_step) // steps_per_epoch
@@ -470,7 +470,7 @@ class CifarModelTrainer(object):
     return starting_epoch
 
   @contextlib.contextmanager
-  def _new_session(self, m, server):
+  def _new_session(self, m, server=None):
     """Creates a new session for model m."""
     # Create a new session for this model, initialize variables, and save / restore from checkpoint.
     tf.logging.info("new sesion!!!!!!!!!!!!!!!!!!!!")
@@ -537,7 +537,7 @@ class CifarModelTrainer(object):
                     cluster=cluster)):
 
         m, meval = self._build_models()
-        starting_epoch = self._calc_starting_epoch(m)
+        starting_epoch = self._calc_starting_epoch(m, server)
 
         if m.type == "dependent_student":
           self.restore_and_save_teacher_model(m, starting_epoch)

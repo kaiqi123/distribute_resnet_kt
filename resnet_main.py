@@ -483,6 +483,7 @@ class CifarModelTrainer(object):
       self._session = tf.Session('', config=config)
 
     else:
+      self._session = tf.Session('', config=config)
       self.session.run(m.init)
 
       self._session = sv.prepare_or_wait_for_session(master=server.target, config=config)

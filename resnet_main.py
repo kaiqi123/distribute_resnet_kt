@@ -139,6 +139,7 @@ class CifarModel(object):
 
     self.summary_op = self.summary_ops()
     self.init = tf.group(tf.global_variables_initializer(), tf.local_variables_initializer())
+    self.init_op = tf.initialize_all_variables()
 
   def summary_ops(self):
       if self.type == "independent_student" or self.type == "teacher":
@@ -484,7 +485,7 @@ class CifarModelTrainer(object):
     else:
       sv = tf.train.Supervisor(is_chief=(FLAGS.task_index == 0),
                             logdir=FLAGS.checkpoint_dir,
-                            init_op=m.init,
+                            init_op=m.init_op,
                             summary_op=None,
                             saver=m.saver,
                             global_step=m.global_step,

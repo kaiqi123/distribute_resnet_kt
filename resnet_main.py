@@ -350,27 +350,27 @@ class CifarModelTrainer(object):
     np.random.seed()
     self.data_loader.reset()
 
-  # def save_model(self, step=None):
-  #   model_save_name = os.path.join(self.model_dir, 'model.ckpt')
-  #   if not tf.gfile.IsDirectory(self.model_dir):
-  #     tf.gfile.MakeDirs(self.model_dir)
-  #   self.saver.save(self.session, model_save_name, global_step=step)
-  #   tf.logging.info('Saved sub model')
-  #
-  # def init_save_log_writer(self):
-  #   if not tf.gfile.IsDirectory(self.log_dir):
-  #     tf.gfile.MakeDirs(self.log_dir)
-  #   self.summary_train_writer = tf.summary.FileWriter(self.log_dir+"/train", self.session.graph)
-  #   self.summary_eval_writer = tf.summary.FileWriter(self.log_dir+"/eval")
-  #   tf.logging.info('Init summary writers')
-  #
-  # def extract_model_spec(self):
-  #   checkpoint_path = tf.train.latest_checkpoint(self.model_dir)
-  #   if checkpoint_path is not None:
-  #     self.saver.restore(self.session, checkpoint_path)
-  #     tf.logging.info('Loaded sub model checkpoint from %s', checkpoint_path)
-  #   else:
-  #     self.save_model(step=0)
+  def save_model(self, step=None):
+    model_save_name = os.path.join(self.model_dir, 'model.ckpt')
+    if not tf.gfile.IsDirectory(self.model_dir):
+      tf.gfile.MakeDirs(self.model_dir)
+    self.saver.save(self.session, model_save_name, global_step=step)
+    tf.logging.info('Saved sub model')
+
+  def init_save_log_writer(self):
+    if not tf.gfile.IsDirectory(self.log_dir):
+      tf.gfile.MakeDirs(self.log_dir)
+    self.summary_train_writer = tf.summary.FileWriter(self.log_dir+"/train", self.session.graph)
+    self.summary_eval_writer = tf.summary.FileWriter(self.log_dir+"/eval")
+    tf.logging.info('Init summary writers')
+
+  def extract_model_spec(self):
+    checkpoint_path = tf.train.latest_checkpoint(self.model_dir)
+    if checkpoint_path is not None:
+      self.saver.restore(self.session, checkpoint_path)
+      tf.logging.info('Loaded sub model checkpoint from %s', checkpoint_path)
+    else:
+      self.save_model(step=0)
 
   def extract_teacher_model_spec(self, model):
     teacher_model_dir = os.path.join(FLAGS.teacher_checkpoint_dir, 'model')
@@ -490,7 +490,7 @@ class CifarModelTrainer(object):
     self._session = sv.prepare_or_wait_for_session(master=server.target, config=config)
 
     self.session.run(m.init)
-    #self.extract_model_spec()
+    self.extract_model_spec()
 
     try:
       yield
@@ -507,7 +507,7 @@ class CifarModelTrainer(object):
           self.init_save_log_writer()
           train_accuracy = helper_utils.run_epoch_training(self.session, m, self.data_loader, curr_epoch, self.summary_train_writer)
           tf.logging.info('Saving model after epoch...')
-          #self.save_model(step=curr_epoch)
+          self.save_model(step=curr_epoch)
           break
       except (tf.errors.AbortedError, tf.errors.UnavailableError) as e:
         tf.logging.info('Retryable error caught: %s.  Retrying.', e)
@@ -554,7 +554,7 @@ class CifarModelTrainer(object):
           tf.logging.info('Train Acc List: {}'.format(train_accuracy_list))
           tf.logging.info('Test Acc List: {}'.format(test_accuracy_list))
           tf.logging.info("Finish one epoch.............................................................................")
-        #self.summary_train_writer.close()
+        self.summary_train_writer.close()
 
     end_time = time.time()
     runtime = round((end_time - start_time) / (60 * 60), 2)

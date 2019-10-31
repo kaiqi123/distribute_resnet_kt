@@ -81,7 +81,7 @@ class DataSetCifar(object):
     tf.logging.info('mean:{}    std: {}'.format(mean, std))
     all_data = (all_data - mean) / std
 
-    #all_data, all_labels, train_dataset_size = self.read_random_data(all_data, all_labels, train_dataset_size, self.hparams)
+    #all_data, all_labels, train_dataset_size = selfself.read_random_data(all_data, all_labels, train_dataset_size, self.hparams)
     #all_data, all_labels, train_dataset_size = self.get_subset_categoriesReduced(all_data, all_labels, train_dataset_size, self.hparams)
     #all_data, all_labels, train_dataset_size = self.get_subset_categoriesReduced_TestDataDivideByLabels(all_data, all_labels, train_dataset_size, self.hparams)
 

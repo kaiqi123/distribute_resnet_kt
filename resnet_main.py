@@ -31,12 +31,18 @@ tf.flags.DEFINE_string('model_type', '#', 'the type of model')
 tf.flags.DEFINE_integer('train_size', 50000, 'the size of training examples')
 tf.flags.DEFINE_integer('test_size', 10000, 'the size of testing examples')
 tf.flags.DEFINE_integer('batch_size', 128, 'the size of one batch of training examples')
-tf.flags.DEFINE_integer('use_cpu', 0, '1 if use CPU, else GPU.')
+#tf.flags.DEFINE_integer('use_cpu', 0, '1 if use CPU, else GPU.')
 tf.flags.DEFINE_float('lamma_KD_initial', 4.0, 'lamma_KD_initial')
 tf.flags.DEFINE_string('KD_checkpoint_dir', './trained_FitNet_phase1/#', 'KD_checkpoint_dir')
 tf.flags.DEFINE_string('DeCAF_checkpoint_dir', '#', 'DeCAF_checkpoint_dir')
 tf.flags.DEFINE_string('test_data_type', '#', 'test_data_type')
 tf.flags.DEFINE_string('teacher_model_name', '#', 'the name of teacher model')
+
+# For distributed
+tf.flags.DEFINE_string("ps_hosts", "#", "Comma-separated list of hostname:port pairs")
+tf.flags.DEFINE_string("worker_hosts", "#", "Comma-separated list of hostname:port pairs")
+tf.flags.DEFINE_string("job_name", "#", "One of 'ps', 'worker'")
+tf.flags.DEFINE_integer("task_index", 0, "Index of task within the job")
 
 FLAGS = tf.flags.FLAGS
 arg_scope = tf.contrib.framework.arg_scope
@@ -312,8 +318,8 @@ class CifarModel(object):
     if is_training:
       self.train_op = _build_train_op(self.hparams, self.lr_rate_ph, self.cost, self.global_step)
 
-    with tf.device('/cpu:0'):
-      self.saver = tf.train.Saver(max_to_keep=2)
+    #with tf.device('/cpu:0'):
+    self.saver = tf.train.Saver(max_to_keep=2)
 
     for var in tf.trainable_variables():
       tf.logging.info(var)
@@ -324,17 +330,6 @@ class CifarModel(object):
       print(key, value)
     self.output_list = helper_output_analyze.return_output_list(self.output_dict)
 
-    """
-    # DeCAF phase 2
-    if is_training:
-      self.train_op = helper_buildLoss_DeCAF.build_train_op_DeCAF_onlyUpdateFc(self.hparams, self.lr_rate_ph, self.cost, self.global_step)
-      #self.train_op = helper_buildLoss_DeCAF.build_train_op_DeCAF_UpdateFcAndBn(self.hparams, self.lr_rate_ph, self.cost, self.global_step)
-    # define saver, restore all variables
-    tvars = tf.trainable_variables()
-    tf.logging.info("num of DeCAF_variables_to_restore: {}".format(len(tvars)))
-    self.saverDeCAF = tf.train.Saver(tvars)
-    """
-
 class CifarModelTrainer(object):
   """Trains an instance of the CifarModel class."""
 
@@ -342,8 +337,8 @@ class CifarModelTrainer(object):
     self._session = None
     self.hparams = hparams
 
-    self.model_dir = os.path.join(FLAGS.checkpoint_dir, 'model')
-    self.log_dir = os.path.join(FLAGS.checkpoint_dir, 'log')
+    # self.model_dir = os.path.join(FLAGS.checkpoint_dir, 'model')
+    # self.log_dir = os.path.join(FLAGS.checkpoint_dir, 'log')
 
     np.random.seed(0)
     if hparams.dataset == 'cifar10' or hparams.dataset == 'cifar100':
@@ -355,28 +350,27 @@ class CifarModelTrainer(object):
     np.random.seed()
     self.data_loader.reset()
 
-  def save_model(self, step=None):
-    model_save_name = os.path.join(self.model_dir, 'model.ckpt')
-    if not tf.gfile.IsDirectory(self.model_dir):
-      tf.gfile.MakeDirs(self.model_dir)
-    self.saver.save(self.session, model_save_name, global_step=step)
-    tf.logging.info('Saved sub model')
-
-  def init_save_log_writer(self):
-    if not tf.gfile.IsDirectory(self.log_dir):
-      tf.gfile.MakeDirs(self.log_dir)
-    self.summary_train_writer = tf.summary.FileWriter(self.log_dir+"/train", self.session.graph)
-    self.summary_eval_writer = tf.summary.FileWriter(self.log_dir+"/eval")
-    tf.logging.info('Init summary writers')
-
-  def extract_model_spec(self):
-    checkpoint_path = tf.train.latest_checkpoint(self.model_dir)
-    if checkpoint_path is not None:
-      self.saver.restore(self.session, checkpoint_path)
-      #chkp.print_tensors_in_checkpoint_file(checkpoint_path, tensor_name='', all_tensors=True)
-      tf.logging.info('Loaded sub model checkpoint from %s', checkpoint_path)
-    else:
-      self.save_model(step=0)
+  # def save_model(self, step=None):
+  #   model_save_name = os.path.join(self.model_dir, 'model.ckpt')
+  #   if not tf.gfile.IsDirectory(self.model_dir):
+  #     tf.gfile.MakeDirs(self.model_dir)
+  #   self.saver.save(self.session, model_save_name, global_step=step)
+  #   tf.logging.info('Saved sub model')
+  #
+  # def init_save_log_writer(self):
+  #   if not tf.gfile.IsDirectory(self.log_dir):
+  #     tf.gfile.MakeDirs(self.log_dir)
+  #   self.summary_train_writer = tf.summary.FileWriter(self.log_dir+"/train", self.session.graph)
+  #   self.summary_eval_writer = tf.summary.FileWriter(self.log_dir+"/eval")
+  #   tf.logging.info('Init summary writers')
+  #
+  # def extract_model_spec(self):
+  #   checkpoint_path = tf.train.latest_checkpoint(self.model_dir)
+  #   if checkpoint_path is not None:
+  #     self.saver.restore(self.session, checkpoint_path)
+  #     tf.logging.info('Loaded sub model checkpoint from %s', checkpoint_path)
+  #   else:
+  #     self.save_model(step=0)
 
   def extract_teacher_model_spec(self, model):
     teacher_model_dir = os.path.join(FLAGS.teacher_checkpoint_dir, 'model')
@@ -421,27 +415,6 @@ class CifarModelTrainer(object):
     test_accuracy = self.eval_child_model(meval, self.data_loader, 'test')
     tf.logging.info('Finish to evaluate {} model.................................................'.format(meval.type))
     return test_accuracy, train_accuracy
-
-  @contextlib.contextmanager
-  def _new_session(self, m):
-    """Creates a new session for model m."""
-    # Create a new session for this model, initialize variables, and save / restore from checkpoint.
-    tf.logging.info("new sesion!!!!!!!!!!!!!!!!!!!!")
-    config = tf.ConfigProto(allow_soft_placement=True, log_device_placement=False)
-    config.gpu_options.allow_growth = True
-    #config.gpu_options.per_process_gpu_memory_fraction = 0.7
-    config.gpu_options.allocator_type = 'BFC'
-    self._session = tf.Session('', config=config)
-    self.session.run(m.init)
-
-    # Load in a previous checkpoint, or save this one
-    self.extract_model_spec()
-
-    try:
-      yield
-    finally:
-      tf.Session.reset('')
-      self._session = None
 
   def _build_models(self):
     """Builds the image models for train and eval."""
@@ -496,16 +469,45 @@ class CifarModelTrainer(object):
     starting_epoch = hparams.num_epochs - epochs_left
     return starting_epoch
 
-  def _run_training_loop(self, m, curr_epoch):
+  @contextlib.contextmanager
+  def _new_session(self, m, server):
+    """Creates a new session for model m."""
+    # Create a new session for this model, initialize variables, and save / restore from checkpoint.
+    tf.logging.info("new sesion!!!!!!!!!!!!!!!!!!!!")
+    config = tf.ConfigProto(allow_soft_placement=True, log_device_placement=False)
+    config.gpu_options.allow_growth = True
+    config.gpu_options.allocator_type = 'BFC'
+    #self._session = tf.Session('', config=config)
+
+    sv = tf.train.Supervisor(is_chief=(FLAGS.task_index == 0),
+                            logdir=FLAGS.checkpoint_dir,
+                            init_op=m.init,
+                            summary_op=None,
+                            saver=m.saver,
+                            global_step=m.global_step,
+                            save_model_secs=60)
+
+    self._session = sv.prepare_or_wait_for_session(master=server.target, config=config)
+
+    #self.session.run(m.init)
+    #self.extract_model_spec()
+
+    try:
+      yield
+    finally:
+      tf.Session.reset('')
+      self._session = None
+
+  def _run_training_loop(self, m, curr_epoch, server):
     """Trains the cifar model `m` for one epoch."""
     start_time = time.time()
     while True:
       try:
-        with self._new_session(m):
+        with self._new_session(m, server):
           self.init_save_log_writer()
           train_accuracy = helper_utils.run_epoch_training(self.session, m, self.data_loader, curr_epoch, self.summary_train_writer)
           tf.logging.info('Saving model after epoch...')
-          self.save_model(step=curr_epoch)
+          #self.save_model(step=curr_epoch)
           break
       except (tf.errors.AbortedError, tf.errors.UnavailableError) as e:
         tf.logging.info('Retryable error caught: %s.  Retrying.', e)
@@ -518,28 +520,42 @@ class CifarModelTrainer(object):
     start_time = time.time()
     hparams = self.hparams
 
-    # Build the child graph
-    with tf.Graph().as_default(), tf.device('/cpu:0' if FLAGS.use_cpu else '/gpu:0'):
+    # for distribute
+    ps_hosts = FLAGS.ps_hosts.split(",")
+    worker_hosts = FLAGS.worker_hosts.split(",")
+    cluster = tf.train.ClusterSpec({"ps": ps_hosts, "worker": worker_hosts})
+    server = tf.train.Server(cluster, job_name=FLAGS.job_name, task_index=FLAGS.task_index)
 
-      m, meval = self._build_models()
-      starting_epoch = self._calc_starting_epoch(m)
+    if FLAGS.job_name == "ps":
+      server.join()
+    elif FLAGS.job_name == "worker":
 
-      if m.type == "dependent_student":
-        self.restore_and_save_teacher_model(m, starting_epoch)
+      # Build the graph
+      #with tf.Graph().as_default(), tf.device('/cpu:0' if FLAGS.use_cpu else '/gpu:0'):
+      with tf.Graph().as_default(), tf.device(tf.train.replica_device_setter(
+                    worker_device="/job:worker/task:%d" % FLAGS.task_index,
+                    cluster=cluster)):
 
-      for curr_epoch in xrange(starting_epoch, hparams.num_epochs):
-        tf.logging.info("Begin to run one epoch.........................................................................................................")
-        training_accuracy = self._run_training_loop(m, curr_epoch)
-        test_accuracy, train_accuracy = self._compute_final_accuracies(meval)
+        m, meval = self._build_models()
+        starting_epoch = self._calc_starting_epoch(m)
 
-        test_accuracy_list.append(test_accuracy)
-        train_accuracy_list.append(train_accuracy)
-        training_accuracy_list.append(training_accuracy)
-        tf.logging.info('Training Acc List: {}'.format(training_accuracy_list))
-        tf.logging.info('Train Acc List: {}'.format(train_accuracy_list))
-        tf.logging.info('Test Acc List: {}'.format(test_accuracy_list))
-        tf.logging.info("Finish one epoch.............................................................................")
-      self.summary_train_writer.close()
+        if m.type == "dependent_student":
+          self.restore_and_save_teacher_model(m, starting_epoch)
+
+        for curr_epoch in xrange(starting_epoch, hparams.num_epochs):
+          tf.logging.info("Begin to run one epoch.........................................................................................................")
+          training_accuracy = self._run_training_loop(m, curr_epoch, server)
+          test_accuracy, train_accuracy = self._compute_final_accuracies(meval)
+
+          test_accuracy_list.append(test_accuracy)
+          train_accuracy_list.append(train_accuracy)
+          training_accuracy_list.append(training_accuracy)
+          tf.logging.info('Training Acc List: {}'.format(training_accuracy_list))
+          tf.logging.info('Train Acc List: {}'.format(train_accuracy_list))
+          tf.logging.info('Test Acc List: {}'.format(test_accuracy_list))
+          tf.logging.info("Finish one epoch.............................................................................")
+        #self.summary_train_writer.close()
+
     end_time = time.time()
     runtime = round((end_time - start_time) / (60 * 60), 2)
     tf.logging.info("run time is: " + str(runtime) + " hour")
@@ -559,7 +575,7 @@ class CifarModelTrainer(object):
 
 def main(_):
 
-  if FLAGS.dataset not in ['cifar10', 'cifar100', 'caltech101']:
+  if FLAGS.dataset not in ['cifar10']:
     raise ValueError('Invalid dataset: %s' % FLAGS.dataset)
 
   hparams = tf.contrib.training.HParams(

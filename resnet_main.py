@@ -471,7 +471,7 @@ class CifarModelTrainer(object):
     return starting_epoch
 
   @contextlib.contextmanager
-  def _new_session(self, m, server=None):
+  def _new_session(self, m, sv=None, server=None):
     """Creates a new session for model m."""
     # Create a new session for this model, initialize variables, and save / restore from checkpoint.
     tf.logging.info("new sesion!!!!!!!!!!!!!!!!!!!!")
@@ -483,13 +483,7 @@ class CifarModelTrainer(object):
       self._session = tf.Session('', config=config)
 
     else:
-      sv = tf.train.Supervisor(is_chief=(FLAGS.task_index == 0),
-                            logdir=FLAGS.checkpoint_dir,
-                            init_op=m.init_op,
-                            summary_op=None,
-                            saver=m.saver,
-                            global_step=m.global_step,
-                            save_model_secs=60)
+
       self._session = sv.prepare_or_wait_for_session(master=server.target, config=config)
 
     self.session.run(m.init)
@@ -500,12 +494,12 @@ class CifarModelTrainer(object):
       tf.Session.reset('')
       self._session = None
 
-  def _run_training_loop(self, m, curr_epoch, server):
+  def _run_training_loop(self, m, curr_epoch, server,sv):
     """Trains the cifar model `m` for one epoch."""
     start_time = time.time()
     while True:
       try:
-        with self._new_session(m, server):
+        with self._new_session(m, sv, server):
           self.init_save_log_writer()
           train_accuracy = helper_utils.run_epoch_training(self.session, m, self.data_loader, curr_epoch, self.summary_train_writer)
           tf.logging.info('Saving model after epoch...')
@@ -539,6 +533,13 @@ class CifarModelTrainer(object):
         with tf.device(tf.train.replica_device_setter(worker_device="/job:worker/task:%d" % FLAGS.task_index,cluster=cluster)):
           m, meval = self._build_models()
 
+        sv = tf.train.Supervisor(is_chief=(FLAGS.task_index == 0),
+                                 logdir=FLAGS.checkpoint_dir,
+                                 init_op=m.init_op,
+                                 summary_op=None,
+                                 saver=m.saver,
+                                 global_step=m.global_step,
+                                 save_model_secs=60)
         #starting_epoch = self._calc_starting_epoch(m)
         starting_epoch = 0
         if m.type == "dependent_student":
@@ -546,7 +547,7 @@ class CifarModelTrainer(object):
 
         for curr_epoch in xrange(starting_epoch, hparams.num_epochs):
           tf.logging.info("Begin to run one epoch.........................................................................................................")
-          training_accuracy = self._run_training_loop(m, curr_epoch, server)
+          training_accuracy = self._run_training_loop(m, curr_epoch, server,sv)
           test_accuracy, train_accuracy = self._compute_final_accuracies(meval)
 
           test_accuracy_list.append(test_accuracy)

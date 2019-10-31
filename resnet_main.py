@@ -532,10 +532,11 @@ class CifarModelTrainer(object):
 
         with tf.device(tf.train.replica_device_setter(worker_device="/job:worker/task:%d" % FLAGS.task_index,cluster=cluster)):
           m, meval = self._build_models()
+          #init_op = tf.initialize_all_variables()
 
         sv = tf.train.Supervisor(is_chief=(FLAGS.task_index == 0),
                                  logdir=FLAGS.checkpoint_dir,
-                                 init_op=m.init_op,
+                                 init_op=m.init,
                                  summary_op=None,
                                  saver=m.saver,
                                  global_step=m.global_step,

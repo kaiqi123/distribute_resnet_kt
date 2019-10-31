@@ -533,11 +533,10 @@ class CifarModelTrainer(object):
 
       # Build the graph
       #with tf.Graph().as_default(), tf.device('/cpu:0' if FLAGS.use_cpu else '/gpu:0'):
-      with tf.Graph().as_default(), tf.device(tf.train.replica_device_setter(
-                    worker_device="/job:worker/task:%d" % FLAGS.task_index,
-                    cluster=cluster)):
+      with tf.Graph().as_default():
 
-        m, meval = self._build_models()
+        with tf.device(tf.train.replica_device_setter(worker_device="/job:worker/task:%d" % FLAGS.task_index,cluster=cluster)):
+          m, meval = self._build_models()
 
       starting_epoch = self._calc_starting_epoch(m)
 

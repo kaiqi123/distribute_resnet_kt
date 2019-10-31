@@ -489,7 +489,7 @@ class CifarModelTrainer(object):
 
     self._session = sv.prepare_or_wait_for_session(master=server.target, config=config)
 
-    #self.session.run(m.init)
+    self.session.run(m.init)
     #self.extract_model_spec()
 
     try:

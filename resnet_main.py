@@ -457,12 +457,12 @@ class CifarModelTrainer(object):
         meval.build('eval')
       return m, meval
 
-  def _calc_starting_epoch(self, m, server):
+  def _calc_starting_epoch(self, m):
     """Calculates the starting epoch for model m based on global step."""
     hparams = self.hparams
     batch_size = hparams.batch_size
     steps_per_epoch = int(hparams.train_size / batch_size)
-    with self._new_session(m, server):
+    with self._new_session(m):
       curr_step = self.session.run(m.global_step)
     total_steps = steps_per_epoch * hparams.num_epochs
     epochs_left = (total_steps - curr_step) // steps_per_epoch
@@ -477,21 +477,22 @@ class CifarModelTrainer(object):
     config = tf.ConfigProto(allow_soft_placement=True, log_device_placement=False)
     config.gpu_options.allow_growth = True
     config.gpu_options.allocator_type = 'BFC'
-    #self._session = tf.Session('', config=config)
 
-    sv = tf.train.Supervisor(is_chief=(FLAGS.task_index == 0),
+    if server is None:
+      self._session = tf.Session('', config=config)
+
+    else:
+      sv = tf.train.Supervisor(is_chief=(FLAGS.task_index == 0),
                             logdir=FLAGS.checkpoint_dir,
                             init_op=m.init,
                             summary_op=None,
                             saver=m.saver,
                             global_step=m.global_step,
                             save_model_secs=60)
-
-    self._session = sv.prepare_or_wait_for_session(master=server.target, config=config)
+      self._session = sv.prepare_or_wait_for_session(master=server.target, config=config)
 
     self.session.run(m.init)
     self.extract_model_spec()
-
     try:
       yield
     finally:
@@ -537,7 +538,7 @@ class CifarModelTrainer(object):
                     cluster=cluster)):
 
         m, meval = self._build_models()
-        starting_epoch = self._calc_starting_epoch(m, server)
+        starting_epoch = self._calc_starting_epoch(m)
 
         if m.type == "dependent_student":
           self.restore_and_save_teacher_model(m, starting_epoch)

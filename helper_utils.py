@@ -8,6 +8,7 @@ import os
 import json
 import helper_initialization
 import helper_output_analyze
+import time
 
 def setup_loss(logits, labels):
   """Returns the cross entropy for the given `logits` and `labels`."""
@@ -157,8 +158,11 @@ def run_epoch_training(session, model, data_loader, curr_epoch, summary_writer):
       #print("iteration: "+ str(step))
     curr_lr = get_lr(curr_epoch, model.hparams, iteration=(step + 1))
     model.lr_rate_ph.load(curr_lr, session=session)
-    if step % 20 == 0:
+
+    if step % 1 == 0:
       tf.logging.info('Training {}/{}'.format(step, steps_per_epoch))
+      time.sleep(10)
+
     train_images, train_labels = data_loader.next_batch()
 
     if model.type == "dependent_student":

@@ -506,7 +506,7 @@ class CifarModelTrainer(object):
     start_time = time.time()
     while True:
       try:
-        with self._new_session(m):
+        with self._new_session(m, server):
           self.init_save_log_writer()
           train_accuracy = helper_utils.run_epoch_training(self.session, m, self.data_loader, curr_epoch, self.summary_train_writer)
           tf.logging.info('Saving model after epoch...')

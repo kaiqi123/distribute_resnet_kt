@@ -501,7 +501,7 @@ class CifarModelTrainer(object):
       #self._session = None
       sv.stop()
 
-  def _run_training_loop(self, m, curr_epoch, server,sv):
+  def _run_training_loop(self, m, curr_epoch, server):
     """Trains the cifar model `m` for one epoch."""
     start_time = time.time()
     while True:

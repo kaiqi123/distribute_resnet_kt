@@ -479,39 +479,39 @@ class CifarModelTrainer(object):
     config.gpu_options.allow_growth = True
     config.gpu_options.allocator_type = 'BFC'
 
-    #if server is None:
-    #  self._session = tf.Session('', config=config)
+    if server is None:
+      self._session = tf.Session('', config=config)
 
-    #else:
-    sv = tf.train.Supervisor(is_chief=(FLAGS.task_index == 0),
-                               logdir=FLAGS.checkpoint_dir,
+    else:
+     sv = tf.train.Supervisor(is_chief=(FLAGS.task_index == 0),
+                               logdir=str(FLAGS.checkpoint_dir),
                                init_op=m.init,
                                summary_op=None,
                                saver=m.saver,
                                global_step=m.global_step,
                                save_model_secs=60)
-    print(server.target)
-    self._session = sv.prepare_or_wait_for_session(master=server.target, config=config)
+     print(server.target)
+     self._session = sv.prepare_or_wait_for_session(master=server.target, config=config)
 
-    #self.session.run(m.init)
-    #self.extract_model_spec()
+    self.session.run(m.init)
+    self.extract_model_spec()
     try:
       yield
     finally:
-      #tf.Session.reset('')
-      #self._session = None
-      sv.stop()
+      tf.Session.reset('')
+      self._session = None
+      #sv.stop()
 
   def _run_training_loop(self, m, curr_epoch, server):
     """Trains the cifar model `m` for one epoch."""
     start_time = time.time()
     while True:
       try:
-        with self._new_session(m, server):
-          #self.init_save_log_writer()
+        with self._new_session(m):
+          self.init_save_log_writer()
           train_accuracy = helper_utils.run_epoch_training(self.session, m, self.data_loader, curr_epoch, self.summary_train_writer)
           tf.logging.info('Saving model after epoch...')
-          #self.save_model(step=curr_epoch)
+          self.save_model(step=curr_epoch)
           break
       except (tf.errors.AbortedError, tf.errors.UnavailableError) as e:
         tf.logging.info('Retryable error caught: %s.  Retrying.', e)
@@ -540,27 +540,25 @@ class CifarModelTrainer(object):
 
         with tf.device(tf.train.replica_device_setter(worker_device="/job:worker/task:%d" % FLAGS.task_index,cluster=cluster)):
           m, meval = self._build_models()
-          #init_op = tf.initialize_all_variables()
 
+          starting_epoch = self._calc_starting_epoch(m)
+          #starting_epoch = 0
+          if m.type == "dependent_student":
+            self.restore_and_save_teacher_model(m, starting_epoch)
 
-        #starting_epoch = self._calc_starting_epoch(m)
-        starting_epoch = 0
-        if m.type == "dependent_student":
-          self.restore_and_save_teacher_model(m, starting_epoch)
+          for curr_epoch in xrange(starting_epoch, hparams.num_epochs):
+            tf.logging.info("Begin to run one epoch.........................................................................................................")
+            training_accuracy = self._run_training_loop(m, curr_epoch, server)
+            test_accuracy, train_accuracy = self._compute_final_accuracies(meval)
 
-        for curr_epoch in xrange(starting_epoch, hparams.num_epochs):
-          tf.logging.info("Begin to run one epoch.........................................................................................................")
-          training_accuracy = self._run_training_loop(m, curr_epoch, server)
-          test_accuracy, train_accuracy = self._compute_final_accuracies(meval)
-
-          test_accuracy_list.append(test_accuracy)
-          train_accuracy_list.append(train_accuracy)
-          training_accuracy_list.append(training_accuracy)
-          tf.logging.info('Training Acc List: {}'.format(training_accuracy_list))
-          tf.logging.info('Train Acc List: {}'.format(train_accuracy_list))
-          tf.logging.info('Test Acc List: {}'.format(test_accuracy_list))
-          tf.logging.info("Finish one epoch.............................................................................")
-        self.summary_train_writer.close()
+            test_accuracy_list.append(test_accuracy)
+            train_accuracy_list.append(train_accuracy)
+            training_accuracy_list.append(training_accuracy)
+            tf.logging.info('Training Acc List: {}'.format(training_accuracy_list))
+            tf.logging.info('Train Acc List: {}'.format(train_accuracy_list))
+            tf.logging.info('Test Acc List: {}'.format(test_accuracy_list))
+            tf.logging.info("Finish one epoch.............................................................................")
+          self.summary_train_writer.close()
 
     end_time = time.time()
     runtime = round((end_time - start_time) / (60 * 60), 2)

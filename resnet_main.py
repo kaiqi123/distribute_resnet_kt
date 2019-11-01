@@ -490,6 +490,7 @@ class CifarModelTrainer(object):
                                saver=m.saver,
                                global_step=m.global_step,
                                save_model_secs=60)
+    print(server.target)
     self._session = sv.prepare_or_wait_for_session(master=server.target, config=config)
 
     #self.session.run(m.init)

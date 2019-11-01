@@ -57,11 +57,6 @@ if not os.path.exists(logName):
 logging.basicConfig(filename=logName,level=logging.DEBUG)
 logging.FileHandler(logName, mode='w')
 
-# for distribute
-ps_hosts = FLAGS.ps_hosts.split(",")
-worker_hosts = FLAGS.worker_hosts.split(",")
-cluster = tf.train.ClusterSpec({"ps": ps_hosts, "worker": worker_hosts})
-server = tf.train.Server(cluster, job_name=FLAGS.job_name, task_index=FLAGS.task_index)
 
 def setup_arg_scopes(is_training):
   batch_norm_decay = 0.9
@@ -530,6 +525,12 @@ class CifarModelTrainer(object):
     start_time = time.time()
     hparams = self.hparams
 
+    # for distribute
+    ps_hosts = FLAGS.ps_hosts.split(",")
+    worker_hosts = FLAGS.worker_hosts.split(",")
+    cluster = tf.train.ClusterSpec({"ps": ps_hosts, "worker": worker_hosts})
+    server = tf.train.Server(cluster, job_name=FLAGS.job_name, task_index=FLAGS.task_index)
+
     if FLAGS.job_name == "ps":
       server.join()
     elif FLAGS.job_name == "worker":
@@ -549,7 +550,7 @@ class CifarModelTrainer(object):
           for curr_epoch in xrange(starting_epoch, hparams.num_epochs):
             tf.logging.info("Begin to run one epoch.........................................................................................................")
             training_accuracy = self._run_training_loop(m, curr_epoch, server)
-            test_accuracy, train_accuracy = self._compute_final_accuracies(meval)
+            #test_accuracy, train_accuracy = self._compute_final_accuracies(meval)
 
             test_accuracy_list.append(test_accuracy)
             train_accuracy_list.append(train_accuracy)

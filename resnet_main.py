@@ -138,8 +138,8 @@ class CifarModel(object):
       self.teacher_saver = tf.train.Saver(teacher_variables_to_restore)
 
     self.summary_op = self.summary_ops()
-    self.init = tf.group(tf.global_variables_initializer(), tf.local_variables_initializer())
-    self.init_op = tf.initialize_all_variables()
+    #self.init = tf.group(tf.global_variables_initializer(), tf.local_variables_initializer())
+    self.init = tf.initialize_all_variables()
 
   def summary_ops(self):
       if self.type == "independent_student" or self.type == "teacher":

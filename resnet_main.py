@@ -471,7 +471,7 @@ class CifarModelTrainer(object):
     return starting_epoch
 
   @contextlib.contextmanager
-  def _new_session(self, m, server=None):
+  def _new_session(self, m, server):
     """Creates a new session for model m."""
     # Create a new session for this model, initialize variables, and save / restore from checkpoint.
     tf.logging.info("new sesion!!!!!!!!!!!!!!!!!!!!")
@@ -480,6 +480,7 @@ class CifarModelTrainer(object):
     config.gpu_options.allocator_type = 'BFC'
 
     #if server is None:
+    print(server.target)
     self._session = tf.Session(server.target, config=config)
 
     # sv = tf.train.Supervisor(is_chief=(FLAGS.task_index == 0),

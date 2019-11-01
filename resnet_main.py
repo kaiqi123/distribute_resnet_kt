@@ -552,8 +552,8 @@ class CifarModelTrainer(object):
             training_accuracy = self._run_training_loop(m, curr_epoch, server)
             #test_accuracy, train_accuracy = self._compute_final_accuracies(meval)
 
-            test_accuracy_list.append(test_accuracy)
-            train_accuracy_list.append(train_accuracy)
+            #test_accuracy_list.append(test_accuracy)
+            #train_accuracy_list.append(train_accuracy)
             training_accuracy_list.append(training_accuracy)
             tf.logging.info('Training Acc List: {}'.format(training_accuracy_list))
             tf.logging.info('Train Acc List: {}'.format(train_accuracy_list))

@@ -481,27 +481,27 @@ class CifarModelTrainer(object):
     config.gpu_options.allocator_type = 'BFC'
 
     #if server is None:
-    #print(server.target)
-    #self._session = tf.Session(server.target, config=config)
-
-    sv = tf.train.Supervisor(is_chief=(FLAGS.task_index == 0),
-                               logdir=str(FLAGS.checkpoint_dir),
-                               init_op=m.init,
-                               summary_op=None,
-                               saver=m.saver,
-                               global_step=m.global_step,
-                               save_model_secs=60)
     print(server.target)
-    self._session = sv.prepare_or_wait_for_session(master=server.target, config=config)
+    self._session = tf.Session(server.target, config=config)
 
-    #self.session.run(m.init)
-    #self.extract_model_spec()
+    # sv = tf.train.Supervisor(is_chief=(FLAGS.task_index == 0),
+    #                            logdir=str(FLAGS.checkpoint_dir),
+    #                            init_op=m.init,
+    #                            summary_op=None,
+    #                            saver=m.saver,
+    #                            global_step=m.global_step,
+    #                            save_model_secs=60)
+    # print(server.target)
+    # self._session = sv.prepare_or_wait_for_session(master=server.target, config=config)
+
+    self.session.run(m.init)
+    self.extract_model_spec()
     try:
       yield
     finally:
-      #tf.Session.reset('')
-      #self._session = None
-      sv.stop()
+      tf.Session.reset('')
+      self._session = None
+      #sv.stop()
 
   def _run_training_loop(self, m, curr_epoch, server):
     """Trains the cifar model `m` for one epoch."""

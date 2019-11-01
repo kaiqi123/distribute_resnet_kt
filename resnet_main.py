@@ -476,7 +476,7 @@ class CifarModelTrainer(object):
     """Creates a new session for model m."""
     # Create a new session for this model, initialize variables, and save / restore from checkpoint.
     tf.logging.info("new sesion!!!!!!!!!!!!!!!!!!!!")
-    config = tf.ConfigProto(allow_soft_placement=True, log_device_placement=False)
+    config = tf.ConfigProto(allow_soft_placement=True, log_device_placement=True)
     config.gpu_options.allow_growth = True
     config.gpu_options.allocator_type = 'BFC'
 

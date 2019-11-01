@@ -498,8 +498,8 @@ class CifarModelTrainer(object):
                                       checkpoint_dir=FLAGS.checkpoint_dir,
                                                       config=config)
 
-    self.session.run(m.init)
-    self.extract_model_spec()
+    #self.session.run(m.init)
+    #self.extract_model_spec()
     try:
       yield
     finally:

@@ -541,8 +541,8 @@ class CifarModelTrainer(object):
         with tf.device(tf.train.replica_device_setter(worker_device="/job:worker/task:%d" % FLAGS.task_index,cluster=cluster)):
           m, meval = self._build_models()
 
-          starting_epoch = self._calc_starting_epoch(m)
-          #starting_epoch = 0
+          #starting_epoch = self._calc_starting_epoch(m)
+          starting_epoch = 0
           if m.type == "dependent_student":
             self.restore_and_save_teacher_model(m, starting_epoch)
 

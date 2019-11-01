@@ -471,7 +471,7 @@ class CifarModelTrainer(object):
     return starting_epoch
 
   @contextlib.contextmanager
-  def _new_session(self, m, sv=None, server=None):
+  def _new_session(self, m, server=None):
     """Creates a new session for model m."""
     # Create a new session for this model, initialize variables, and save / restore from checkpoint.
     tf.logging.info("new sesion!!!!!!!!!!!!!!!!!!!!")
@@ -479,18 +479,18 @@ class CifarModelTrainer(object):
     config.gpu_options.allow_growth = True
     config.gpu_options.allocator_type = 'BFC'
 
-    if server is None:
-      self._session = tf.Session('', config=config)
+    #if server is None:
+    #  self._session = tf.Session('', config=config)
 
-    else:
-      sv = tf.train.Supervisor(is_chief=(FLAGS.task_index == 0),
+    #else:
+    sv = tf.train.Supervisor(is_chief=(FLAGS.task_index == 0),
                                logdir=FLAGS.checkpoint_dir,
                                init_op=m.init,
                                summary_op=None,
                                saver=m.saver,
                                global_step=m.global_step,
                                save_model_secs=60)
-      self._session = sv.prepare_or_wait_for_session(master=server.target, config=config)
+    self._session = sv.prepare_or_wait_for_session(master=server.target, config=config)
 
     #self.session.run(m.init)
     #self.extract_model_spec()
@@ -506,11 +506,11 @@ class CifarModelTrainer(object):
     start_time = time.time()
     while True:
       try:
-        with self._new_session(m, sv, server):
-          self.init_save_log_writer()
+        with self._new_session(m, server):
+          #self.init_save_log_writer()
           train_accuracy = helper_utils.run_epoch_training(self.session, m, self.data_loader, curr_epoch, self.summary_train_writer)
           tf.logging.info('Saving model after epoch...')
-          self.save_model(step=curr_epoch)
+          #self.save_model(step=curr_epoch)
           break
       except (tf.errors.AbortedError, tf.errors.UnavailableError) as e:
         tf.logging.info('Retryable error caught: %s.  Retrying.', e)

@@ -57,6 +57,12 @@ if not os.path.exists(logName):
 logging.basicConfig(filename=logName,level=logging.DEBUG)
 logging.FileHandler(logName, mode='w')
 
+# for distribute
+ps_hosts = FLAGS.ps_hosts.split(",")
+worker_hosts = FLAGS.worker_hosts.split(",")
+cluster = tf.train.ClusterSpec({"ps": ps_hosts, "worker": worker_hosts})
+server = tf.train.Server(cluster, job_name=FLAGS.job_name, task_index=FLAGS.task_index)
+
 def setup_arg_scopes(is_training):
   batch_norm_decay = 0.9
   batch_norm_epsilon = 1e-5
@@ -471,7 +477,7 @@ class CifarModelTrainer(object):
     return starting_epoch
 
   @contextlib.contextmanager
-  def _new_session(self, m, server):
+  def _new_session(self, m):
     """Creates a new session for model m."""
     # Create a new session for this model, initialize variables, and save / restore from checkpoint.
     tf.logging.info("new sesion!!!!!!!!!!!!!!!!!!!!")
@@ -507,7 +513,7 @@ class CifarModelTrainer(object):
     start_time = time.time()
     while True:
       try:
-        with self._new_session(m, server):
+        with self._new_session(m):
           self.init_save_log_writer()
           train_accuracy = helper_utils.run_epoch_training(self.session, m, self.data_loader, curr_epoch, self.summary_train_writer)
           tf.logging.info('Saving model after epoch...')
@@ -523,12 +529,6 @@ class CifarModelTrainer(object):
   def run_model(self):
     start_time = time.time()
     hparams = self.hparams
-
-    # for distribute
-    ps_hosts = FLAGS.ps_hosts.split(",")
-    worker_hosts = FLAGS.worker_hosts.split(",")
-    cluster = tf.train.ClusterSpec({"ps": ps_hosts, "worker": worker_hosts})
-    server = tf.train.Server(cluster, job_name=FLAGS.job_name, task_index=FLAGS.task_index)
 
     if FLAGS.job_name == "ps":
       server.join()

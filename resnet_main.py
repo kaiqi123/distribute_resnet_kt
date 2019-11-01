@@ -338,8 +338,8 @@ class CifarModelTrainer(object):
     self._session = None
     self.hparams = hparams
 
-    # self.model_dir = os.path.join(FLAGS.checkpoint_dir, 'model')
-    # self.log_dir = os.path.join(FLAGS.checkpoint_dir, 'log')
+    self.model_dir = os.path.join(FLAGS.checkpoint_dir, 'model')
+    self.log_dir = os.path.join(FLAGS.checkpoint_dir, 'log')
 
     np.random.seed(0)
     if hparams.dataset == 'cifar10' or hparams.dataset == 'cifar100':

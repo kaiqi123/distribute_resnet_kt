@@ -137,7 +137,7 @@ student_avg_num0filters_dict_toatalEpochs = {"group1_block0_sub1_relu":[], "grou
                "unit_last_relu":[], "fc": []}
 
 count_cosine_lists = [[],[],[]]
-def run_epoch_training(session, model, data_loader, curr_epoch, summary_writer):
+def run_epoch_training(session, model, data_loader, curr_epoch):
   steps_per_epoch = int(model.hparams.train_size / model.hparams.batch_size)
   tf.logging.info('steps per epoch: {}'.format(steps_per_epoch))
   curr_step = session.run(model.global_step)

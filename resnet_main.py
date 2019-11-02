@@ -500,11 +500,11 @@ class CifarModelTrainer(object):
 
     #self.session.run(m.init)
     #self.extract_model_spec()
-    try:
-      yield
-    finally:
-      tf.Session.reset('')
-      self._session = None
+    #try:
+    #  yield
+    #finally:
+      #tf.Session.reset(server.target)
+      #self._session = None
       #sv.stop()
 
   def _run_training_loop(self, m, curr_epoch, server):

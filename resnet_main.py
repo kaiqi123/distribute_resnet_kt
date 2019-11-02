@@ -481,7 +481,7 @@ class CifarModelTrainer(object):
     config.gpu_options.allocator_type = 'BFC'
 
     #print(server.target)
-    self._session = tf.Session(server.target, config=config)
+    #self._session = tf.Session(server.target, config=config)
 
     # sv = tf.train.Supervisor(is_chief=(FLAGS.task_index == 0),
     #                            logdir=str(FLAGS.checkpoint_dir),
@@ -493,10 +493,10 @@ class CifarModelTrainer(object):
     # print(server.target)
     # self._session = sv.prepare_or_wait_for_session(server.target, config=config)
 
-    # self._session = tf.train.MonitoredTrainingSession(master=server.target,
-    #                                   is_chief=(FLAGS.task_index == 0),
-    #                                   checkpoint_dir=FLAGS.checkpoint_dir,
-    #                                                   config=config)
+    self._session = tf.train.MonitoredTrainingSession(master=server.target,
+                                      is_chief=(FLAGS.task_index == 0),
+                                      checkpoint_dir=FLAGS.checkpoint_dir
+                                                      )
 
     self.session.run(m.init)
     self.extract_model_spec()

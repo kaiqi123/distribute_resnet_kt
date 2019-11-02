@@ -563,7 +563,7 @@ class CifarModelTrainer(object):
           tf.logging.info('Train Acc List: {}'.format(train_accuracy_list))
           tf.logging.info('Test Acc List: {}'.format(test_accuracy_list))
           tf.logging.info("Finish one epoch.............................................................................")
-          self.summary_train_writer.close()
+          #self.summary_train_writer.close()
 
     end_time = time.time()
     runtime = round((end_time - start_time) / (60 * 60), 2)

@@ -213,7 +213,7 @@ def run_epoch_training(session, model, data_loader, curr_epoch, summary_writer):
 
     else:
       raise EOFError("Not found model.type when training!")
-    summary_writer.add_summary(summary, step)
+    #summary_writer.add_summary(summary, step)
 
   train_accuracy = session.run(model.accuracy)
   tf.logging.info('Training accuracy: {}'.format(train_accuracy))

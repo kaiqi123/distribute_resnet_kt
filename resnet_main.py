@@ -498,8 +498,8 @@ class CifarModelTrainer(object):
                                       checkpoint_dir=FLAGS.checkpoint_dir
                                                       )
 
-    self.session.run(m.init)
-    self.extract_model_spec()
+    #self.session.run(m.init)
+    #self.extract_model_spec()
     try:
       yield
     finally:
@@ -513,10 +513,10 @@ class CifarModelTrainer(object):
     while True:
       try:
         with self._new_session(m, server):
-          self.init_save_log_writer()
+          #self.init_save_log_writer()
           train_accuracy = helper_utils.run_epoch_training(self.session, m, self.data_loader, curr_epoch, self.summary_train_writer)
           tf.logging.info('Saving model after epoch...')
-          self.save_model(step=curr_epoch)
+          #self.save_model(step=curr_epoch)
           break
       except (tf.errors.AbortedError, tf.errors.UnavailableError) as e:
         tf.logging.info('Retryable error caught: %s.  Retrying.', e)

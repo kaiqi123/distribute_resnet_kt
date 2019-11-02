@@ -161,7 +161,7 @@ def run_epoch_training(session, model, data_loader, curr_epoch, summary_writer):
 
     if step % 1 == 0:
       tf.logging.info('Training {}/{}'.format(step, steps_per_epoch))
-      time.sleep(10)
+      time.sleep(2)
 
     train_images, train_labels = data_loader.next_batch()
 

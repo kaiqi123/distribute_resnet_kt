@@ -546,24 +546,24 @@ class CifarModelTrainer(object):
         with tf.device(tf.train.replica_device_setter(worker_device="/job:worker/task:%d" % FLAGS.task_index,cluster=cluster)):
           m, meval = self._build_models()
 
-          #starting_epoch = self._calc_starting_epoch(m)
-          starting_epoch = 0
-          if m.type == "dependent_student":
-            self.restore_and_save_teacher_model(m, starting_epoch)
+        #starting_epoch = self._calc_starting_epoch(m)
+        starting_epoch = 0
+        if m.type == "dependent_student":
+          self.restore_and_save_teacher_model(m, starting_epoch)
 
-          for curr_epoch in xrange(starting_epoch, hparams.num_epochs):
-            tf.logging.info("Begin to run one epoch.........................................................................................................")
-            training_accuracy = self._run_training_loop(m, curr_epoch, server)
-            #test_accuracy, train_accuracy = self._compute_final_accuracies(meval)
+        for curr_epoch in xrange(starting_epoch, hparams.num_epochs):
+          tf.logging.info("Begin to run one epoch.........................................................................................................")
+          training_accuracy = self._run_training_loop(m, curr_epoch, server)
+          #test_accuracy, train_accuracy = self._compute_final_accuracies(meval)
 
-            #test_accuracy_list.append(test_accuracy)
-            #train_accuracy_list.append(train_accuracy)
-            training_accuracy_list.append(training_accuracy)
-            tf.logging.info('Training Acc List: {}'.format(training_accuracy_list))
-            tf.logging.info('Train Acc List: {}'.format(train_accuracy_list))
-            tf.logging.info('Test Acc List: {}'.format(test_accuracy_list))
-            tf.logging.info("Finish one epoch.............................................................................")
-          self.summary_train_writer.close()
+          #test_accuracy_list.append(test_accuracy)
+          #train_accuracy_list.append(train_accuracy)
+          training_accuracy_list.append(training_accuracy)
+          tf.logging.info('Training Acc List: {}'.format(training_accuracy_list))
+          tf.logging.info('Train Acc List: {}'.format(train_accuracy_list))
+          tf.logging.info('Test Acc List: {}'.format(test_accuracy_list))
+          tf.logging.info("Finish one epoch.............................................................................")
+        self.summary_train_writer.close()
 
     end_time = time.time()
     runtime = round((end_time - start_time) / (60 * 60), 2)

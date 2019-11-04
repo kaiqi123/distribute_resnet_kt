@@ -210,7 +210,7 @@ def run_epoch_training(session, model, data_loader, curr_epoch):
             model.labels: train_labels,
           })
       tf.logging.info('Training {}/{}'.format(step, steps_per_epoch))
-      time.sleep(10)
+      #time.sleep(10)
 
       # analyze output of every layer for pruning
       # avg_num0filters_dict_perEpoch = helper_output_analyze.run_output_list_perIteration(session, model, train_images, train_labels, avg_num0filters_dict_perEpoch)

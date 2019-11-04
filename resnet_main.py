@@ -472,13 +472,6 @@ class CifarModelTrainer(object):
 
   @contextlib.contextmanager
   def _new_session(self, m, server):
-    """Creates a new session for model m."""
-    # Create a new session for this model, initialize variables, and save / restore from checkpoint.
-    # tf.logging.info("new sesion!!!!!!!!!!!!!!!!!!!!")
-    # config = tf.ConfigProto(allow_soft_placement=True, log_device_placement=True)
-    # config.gpu_options.allow_growth = True
-    # config.gpu_options.allocator_type = 'BFC'
-
     self._session = tf.train.MonitoredTrainingSession(master=server.target,
                                       is_chief=(FLAGS.task_index == 0),
                                       checkpoint_dir=FLAGS.checkpoint_dir)
@@ -533,14 +526,12 @@ class CifarModelTrainer(object):
     elif FLAGS.job_name == "worker":
 
       # Build the graph
-      #with tf.Graph().as_default(), tf.device('/cpu:0' if FLAGS.use_cpu else '/gpu:0'):
       with tf.Graph().as_default():
 
         with tf.device(tf.train.replica_device_setter(worker_device="/job:worker/task:%d" % FLAGS.task_index,cluster=cluster)):
           m = self._build_models()
 
-        #starting_epoch = self._calc_starting_epoch(m)
-        starting_epoch = 0
+        starting_epoch = self._calc_starting_epoch(m)
         if m.type == "dependent_student":
           self.restore_and_save_teacher_model(m, starting_epoch)
 

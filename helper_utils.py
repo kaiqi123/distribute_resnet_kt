@@ -140,9 +140,8 @@ count_cosine_lists = [[],[],[]]
 def run_epoch_training(session, model, data_loader, curr_epoch):
   steps_per_epoch = int(model.hparams.train_size / model.hparams.batch_size)
   tf.logging.info('steps per epoch: {}'.format(steps_per_epoch))
-  #curr_step = session.run(model.global_step)
-  #print(curr_epoch)
-  #assert curr_step % steps_per_epoch == 0
+  curr_step = session.run(model.global_step)
+  assert curr_step % steps_per_epoch == 0
 
   # Get the current learning rate for the model based on the current epoch
   curr_lr = get_lr(curr_epoch, model.hparams, iteration=0)
@@ -154,19 +153,15 @@ def run_epoch_training(session, model, data_loader, curr_epoch):
   #     for key in student_avg_num0filters_dict_toatalEpochs.keys():
   #         avg_num0filters_dict_perEpoch[key] = []
 
-  #for step in xrange(steps_per_epoch):
   step = 0
   while step < steps_per_epoch:
-  #for step in xrange(5):
-      #print("iteration: "+ str(step))
-    # curr_lr = get_lr(curr_epoch, model.hparams, iteration=(step + 1))
-    # model.lr_rate_ph.load(curr_lr, session=session)
+    curr_lr = get_lr(curr_epoch, model.hparams, iteration=(step + 1))
+    model.lr_rate_ph.load(curr_lr, session=session)
 
-    # if step % 1 == 0:
-
+    if step % 1 == 0:
+        tf.logging.info('Training {}/{}'.format(step, steps_per_epoch))
 
     train_images, train_labels = data_loader.next_batch()
-
     if model.type == "dependent_student":
 
       # for cosine similarity
@@ -209,8 +204,6 @@ def run_epoch_training(session, model, data_loader, curr_epoch):
             model.images: train_images,
             model.labels: train_labels,
           })
-      tf.logging.info('Training {}/{}'.format(step, steps_per_epoch))
-      #time.sleep(10)
 
       # analyze output of every layer for pruning
       # avg_num0filters_dict_perEpoch = helper_output_analyze.run_output_list_perIteration(session, model, train_images, train_labels, avg_num0filters_dict_perEpoch)
@@ -226,7 +219,7 @@ def run_epoch_training(session, model, data_loader, curr_epoch):
     teacher_accuracy = session.run(model.teacher_model.accuracy)
     tf.logging.info('Teacher accuracy: {}'.format(teacher_accuracy))
 
-  tf.logging.info('number of trainable params: {}'.format(model.num_trainable_params))
+  #tf.logging.info('number of trainable params: {}'.format(model.num_trainable_params))
 
   # analyze output of every layer for pruning
   # if model.type == "independent_student" or model.type == "teacher":

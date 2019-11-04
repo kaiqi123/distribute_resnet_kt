@@ -442,10 +442,10 @@ class CifarModelTrainer(object):
         m.build('train')
         self._num_trainable_params = m.num_trainable_params
         self._saver = m.saver
-      with tf.variable_scope('model', reuse=True, use_resource=False):
-        meval = CifarModel(self.hparams, 'independent_student')
-        meval.build('eval')
-      return m, meval
+      # with tf.variable_scope('model', reuse=True, use_resource=False):
+      #   meval = CifarModel(self.hparams, 'independent_student')
+      #   meval.build('eval')
+      return m
 
     elif FLAGS.model_type == "teacher":
       tf.logging.info("build teacher###########################")
@@ -558,7 +558,7 @@ class CifarModelTrainer(object):
       with tf.Graph().as_default():
 
         with tf.device(tf.train.replica_device_setter(worker_device="/job:worker/task:%d" % FLAGS.task_index,cluster=cluster)):
-          m, meval = self._build_models()
+          m = self._build_models()
 
         #starting_epoch = self._calc_starting_epoch(m)
         starting_epoch = 0

@@ -471,7 +471,7 @@ class CifarModelTrainer(object):
     return starting_epoch
 
   @contextlib.contextmanager
-  def _new_session(self, m, server):
+  def _new_session(self, m, server=None):
     self._session = tf.train.MonitoredTrainingSession(master=server.target,
                                       is_chief=(FLAGS.task_index == 0),
                                       checkpoint_dir=FLAGS.checkpoint_dir)

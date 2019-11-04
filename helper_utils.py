@@ -208,7 +208,7 @@ def run_epoch_training(session, model, data_loader, curr_epoch):
       #       model.images: train_images,
       #       model.labels: train_labels,
       #     })
-      _, step, eval_op, summary = session.run(
+      _ = session.run(
         model.train_op,
           feed_dict={
             model.images: train_images,

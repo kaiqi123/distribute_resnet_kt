@@ -140,8 +140,8 @@ count_cosine_lists = [[],[],[]]
 def run_epoch_training(session, model, data_loader, curr_epoch):
   steps_per_epoch = int(model.hparams.train_size / model.hparams.batch_size)
   tf.logging.info('steps per epoch: {}'.format(steps_per_epoch))
-  curr_step = session.run(model.global_step)
-  print(curr_epoch)
+  #curr_step = session.run(model.global_step)
+  #print(curr_epoch)
   #assert curr_step % steps_per_epoch == 0
 
   # Get the current learning rate for the model based on the current epoch
@@ -149,20 +149,20 @@ def run_epoch_training(session, model, data_loader, curr_epoch):
   tf.logging.info('lr of {} for epoch {}'.format(curr_lr, curr_epoch))
 
   # init avg_num0filters_dict_perEpoch, key the same as student_avg_num0filters_dict_toatalEpochs, value is []
-  if model.type == "independent_student":
-      avg_num0filters_dict_perEpoch = {}
-      for key in student_avg_num0filters_dict_toatalEpochs.keys():
-          avg_num0filters_dict_perEpoch[key] = []
+  # if model.type == "independent_student":
+  #     avg_num0filters_dict_perEpoch = {}
+  #     for key in student_avg_num0filters_dict_toatalEpochs.keys():
+  #         avg_num0filters_dict_perEpoch[key] = []
 
   for step in xrange(steps_per_epoch):
   #for step in xrange(5):
       #print("iteration: "+ str(step))
-    curr_lr = get_lr(curr_epoch, model.hparams, iteration=(step + 1))
-    model.lr_rate_ph.load(curr_lr, session=session)
+    # curr_lr = get_lr(curr_epoch, model.hparams, iteration=(step + 1))
+    # model.lr_rate_ph.load(curr_lr, session=session)
 
-    if step % 1 == 0:
-      tf.logging.info('Training {}/{}'.format(step, steps_per_epoch))
-      time.sleep(2)
+    # if step % 1 == 0:
+    tf.logging.info('Training {}/{}'.format(step, steps_per_epoch))
+      # time.sleep(2)
 
     train_images, train_labels = data_loader.next_batch()
 
@@ -202,13 +202,18 @@ def run_epoch_training(session, model, data_loader, curr_epoch):
       #if curr_epoch == 0 and step == 0:
       #    restore_variables_from_DeCAF_phase1(model, session)
 
+      # _, step, eval_op, summary = session.run(
+      #   [model.train_op, model.global_step, model.eval_op, model.summary_op],
+      #     feed_dict={
+      #       model.images: train_images,
+      #       model.labels: train_labels,
+      #     })
       _, step, eval_op, summary = session.run(
-        [model.train_op, model.global_step, model.eval_op, model.summary_op],
+        model.train_op,
           feed_dict={
             model.images: train_images,
             model.labels: train_labels,
           })
-
       # analyze output of every layer for pruning
       # avg_num0filters_dict_perEpoch = helper_output_analyze.run_output_list_perIteration(session, model, train_images, train_labels, avg_num0filters_dict_perEpoch)
 

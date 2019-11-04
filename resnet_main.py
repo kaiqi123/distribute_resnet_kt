@@ -474,68 +474,48 @@ class CifarModelTrainer(object):
   def _new_session(self, m, server):
     """Creates a new session for model m."""
     # Create a new session for this model, initialize variables, and save / restore from checkpoint.
-    tf.logging.info("new sesion!!!!!!!!!!!!!!!!!!!!")
-    config = tf.ConfigProto(allow_soft_placement=True, log_device_placement=True)
-    config.gpu_options.allow_growth = True
-    config.gpu_options.allocator_type = 'BFC'
-
-    #print(server.target)
-    #self._session = tf.Session(server.target, config=config)
-
-    # sv = tf.train.Supervisor(is_chief=(FLAGS.task_index == 0),
-    #                            logdir=str(FLAGS.checkpoint_dir),
-    #                            init_op=m.init,
-    #                            summary_op=None,
-    #                            saver=m.saver,
-    #                            global_step=m.global_step,
-    #                            save_model_secs=60)
-    # print(server.target)
-    # self._session = sv.prepare_or_wait_for_session(server.target, config=config)
+    # tf.logging.info("new sesion!!!!!!!!!!!!!!!!!!!!")
+    # config = tf.ConfigProto(allow_soft_placement=True, log_device_placement=True)
+    # config.gpu_options.allow_growth = True
+    # config.gpu_options.allocator_type = 'BFC'
 
     self._session = tf.train.MonitoredTrainingSession(master=server.target,
                                       is_chief=(FLAGS.task_index == 0),
                                       checkpoint_dir=FLAGS.checkpoint_dir)
-
-
-    #self.session.run(m.init)
-    #self.extract_model_spec()
     try:
       yield
     finally:
       tf.Session.reset(server.target)
       self._session = None
-      #sv.stop()
-
-  # def _run_training_loop(self, m, curr_epoch, server):
-  #   """Trains the cifar model `m` for one epoch."""
-  #   start_time = time.time()
-  #   while True:
-  #     try:
-  #       with self._new_session(m, server):
-  #         #self.init_save_log_writer()
-  #         #train_accuracy = helper_utils.run_epoch_training(self.session, m, self.data_loader, curr_epoch, self.summary_train_writer)
-  #         train_accuracy = helper_utils.run_epoch_training(self.session, m, self.data_loader, curr_epoch)
-  #         tf.logging.info('Saving model after epoch...')
-  #         #self.save_model(step=curr_epoch)
-  #         break
-  #     except (tf.errors.AbortedError, tf.errors.UnavailableError) as e:
-  #       tf.logging.info('Retryable error caught: %s.  Retrying.', e)
-  #   tf.logging.info('Finish training epoch: {}'.format(curr_epoch))
-  #   tf.logging.info('Epoch time(min): {}'.format((time.time() - start_time) / 60.0))
-  #   return train_accuracy
 
   def _run_training_loop(self, m, curr_epoch, server):
-    """Trains the cifar model `m` for one epoch."""
     start_time = time.time()
-    self.session = tf.train.MonitoredTrainingSession(master=server.target,
-                                                      is_chief=(FLAGS.task_index == 0),
-                                                      checkpoint_dir=FLAGS.checkpoint_dir
-                                                      )
-    train_accuracy = helper_utils.run_epoch_training(self.session, m, self.data_loader, curr_epoch)
-    tf.logging.info('Saving model after epoch...')
+    while True:
+      try:
+        with self._new_session(m, server):
+          #self.init_save_log_writer()
+          #train_accuracy = helper_utils.run_epoch_training(self.session, m, self.data_loader, curr_epoch, self.summary_train_writer)
+          train_accuracy = helper_utils.run_epoch_training(self.session, m, self.data_loader, curr_epoch)
+          #tf.logging.info('Saving model after epoch...')
+          #self.save_model(step=curr_epoch)
+          break
+      except (tf.errors.AbortedError, tf.errors.UnavailableError) as e:
+        tf.logging.info('Retryable error caught: %s.  Retrying.', e)
     tf.logging.info('Finish training epoch: {}'.format(curr_epoch))
     tf.logging.info('Epoch time(min): {}'.format((time.time() - start_time) / 60.0))
     return train_accuracy
+
+  # def _run_training_loop(self, m, curr_epoch, server):
+  #   start_time = time.time()
+  #   self.session = tf.train.MonitoredTrainingSession(master=server.target,
+  #                                                     is_chief=(FLAGS.task_index == 0),
+  #                                                     checkpoint_dir=FLAGS.checkpoint_dir
+  #                                                     )
+  #   train_accuracy = helper_utils.run_epoch_training(self.session, m, self.data_loader, curr_epoch)
+  #   tf.logging.info('Saving model after epoch...')
+  #   tf.logging.info('Finish training epoch: {}'.format(curr_epoch))
+  #   tf.logging.info('Epoch time(min): {}'.format((time.time() - start_time) / 60.0))
+  #   return train_accuracy
 
 
   def run_model(self):
@@ -586,9 +566,9 @@ class CifarModelTrainer(object):
   def saver(self):
     return self._saver
 
-  # @property
-  # def session(self):
-  #   return self._session
+  @property
+  def session(self):
+    return self._session
 
   @property
   def num_trainable_params(self):

@@ -162,7 +162,7 @@ def calculate_training_accuracy(session, model):
         tf.logging.info('Teacher accuracy: {}'.format(teacher_accuracy))
     return training_accuracy
 
-def show_accuracy_list(session, curr_epoch, model_train, training_accuracy_list):
+def show_accuracy_list(session, curr_epoch, model_train, training_accuracy_list, train_accuracy_list, test_accuracy_list):
     if curr_epoch != 1:
         with open("accuracy/training_accuracy.json", 'r') as f:
             training_accuracy_list = json.load(f)

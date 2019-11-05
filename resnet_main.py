@@ -438,10 +438,10 @@ class CifarModelTrainer(object):
         m.build('train')
         self._num_trainable_params = m.num_trainable_params
         self._saver = m.saver
-      # with tf.variable_scope('model', reuse=True, use_resource=False):
-      #   meval = CifarModel(self.hparams, 'independent_student')
-      #   meval.build('eval')
-      return m
+      with tf.variable_scope('model', reuse=True, use_resource=False):
+        meval = CifarModel(self.hparams, 'independent_student')
+        meval.build('eval')
+      return m, meval
 
     elif FLAGS.model_type == "teacher":
       tf.logging.info("build teacher###########################")
@@ -473,7 +473,7 @@ class CifarModelTrainer(object):
       with tf.Graph().as_default():
 
         with tf.device(tf.train.replica_device_setter(worker_device="/job:worker/task:%d" % FLAGS.task_index,cluster=cluster)):
-          m = self._build_models()
+          m, meval = self._build_models()
 
         sv = tf.train.Supervisor(is_chief=(FLAGS.task_index == 0),
                                  logdir=FLAGS.checkpoint_dir,
@@ -483,9 +483,9 @@ class CifarModelTrainer(object):
                                  global_step=m.global_step,
                                  save_model_secs=400)
 
-        # test_accuracy_list = []
-        # train_accuracy_list = []
         training_accuracy_list = []
+        train_accuracy_list = []
+        test_accuracy_list = []
 
         curr_step = 0
         steps_per_epoch = int(hparams.train_size / hparams.batch_size)
@@ -508,7 +508,7 @@ class CifarModelTrainer(object):
             if curr_step!=0 and (curr_step % steps_per_epoch == 0 or curr_step == total_steps-1):
               curr_epoch = int(curr_step / steps_per_epoch)
               tf.logging.info("curr_step: {}, curr_epoch: {}".format(curr_step, curr_epoch))
-              training_accuracy_list = helper_utils.show_accuracy_list(session, curr_epoch, m, training_accuracy_list)
+              training_accuracy_list = helper_utils.show_accuracy_list(session, curr_epoch, m, training_accuracy_list, train_accuracy_list, test_accuracy_list)
               if FLAGS.task_index == 0:
                 # assert len(training_accuracy_list) == curr_epoch
                 tf.logging.info('Training Acc List: {}\n'.format(training_accuracy_list))

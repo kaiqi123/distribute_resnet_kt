@@ -560,23 +560,19 @@ class CifarModelTrainer(object):
             if curr_step % steps_per_epoch == 0 or curr_step == total_steps-1:
 
               if curr_step != 0:
-                f = open("accuracy/training_accuracy.txt", 'r')
-                test_accuracy = json.load(f.readlines())
-                print(len(test_accuracy), test_accuracy)
-                f.close()
+                with open("accuracy/training_accuracy.json", 'r') as f:
+                  training_accuracy_list = json.load(f)
 
+              print(len(training_accuracy_list), training_accuracy_list)
               curr_epoch = int (curr_step / steps_per_epoch)
               training_accuracy = helper_utils.calculate_training_accuracy(session,m)
               #test_accuracy, train_accuracy = self._compute_final_accuracies(meval)
 
               training_accuracy_list.append(training_accuracy)
-              # test_accuracy_list.append(test_accuracy)
-              # train_accuracy_list.append(train_accuracy)
               print(len(training_accuracy_list), curr_epoch)
 
-              f = open("accuracy/training_accuracy.txt", 'w')
-              f.write(training_accuracy_list)
-              f.close()
+              with open("accuracy/training_accuracy.json", 'w') as f:
+                json.dump(training_accuracy_list, f)
 
               if FLAGS.task_index == 0:
                 tf.logging.info('Training Acc List: {}'.format(training_accuracy_list))

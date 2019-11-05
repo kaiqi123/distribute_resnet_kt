@@ -47,10 +47,6 @@ tf.flags.DEFINE_integer("task_index", 0, "Index of task within the job")
 FLAGS = tf.flags.FLAGS
 arg_scope = tf.contrib.framework.arg_scope
 
-test_accuracy_list = []
-train_accuracy_list = []
-training_accuracy_list  = []
-
 logName = "./logs/"+str(FLAGS.checkpoint_dir).split("/")[2]+".log"
 if not os.path.exists(logName):
     os.system(r"touch {}".format(logName))
@@ -539,6 +535,10 @@ class CifarModelTrainer(object):
                                  global_step=m.global_step,
                                  save_model_secs=400)
         #starting_epoch = self._calc_starting_epoch(m, server)
+        test_accuracy_list = []
+        train_accuracy_list = []
+        training_accuracy_list = []
+
         curr_step = 0
         steps_per_epoch = int(hparams.train_size / hparams.batch_size)
         total_steps = hparams.num_epochs * steps_per_epoch

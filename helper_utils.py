@@ -139,8 +139,10 @@ student_avg_num0filters_dict_toatalEpochs = {"group1_block0_sub1_relu":[], "grou
 count_cosine_lists = [[],[],[]]
 def run_epoch_training(session, model, data_loader, curr_epoch):
   steps_per_epoch = int(model.hparams.train_size / model.hparams.batch_size)
+  steps_per_epoch = 10
   tf.logging.info('steps per epoch: {}'.format(steps_per_epoch))
-  #curr_step = session.run(model.global_step)
+  curr_step = session.run(model.global_step)
+  print(curr_step)
   #assert curr_step % steps_per_epoch == 0
 
   # Get the current learning rate for the model based on the current epoch
@@ -154,7 +156,7 @@ def run_epoch_training(session, model, data_loader, curr_epoch):
   #         avg_num0filters_dict_perEpoch[key] = []
 
   step = 0
-  while step < steps_per_epoch:
+  while step < curr_step+steps_per_epoch:
 
     if step % 1 == 0:
         tf.logging.info('Training {}/{}'.format(step, steps_per_epoch))

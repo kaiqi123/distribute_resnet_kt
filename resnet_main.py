@@ -540,22 +540,24 @@ class CifarModelTrainer(object):
                                  save_model_secs=60)
         #starting_epoch = self._calc_starting_epoch(m, server)
         starting_epoch = 0
-        if m.type == "dependent_student":
-          self.restore_and_save_teacher_model(m, starting_epoch)
+        with sv.prepare_or_wait_for_session(server.target) as session:
+          if m.type == "dependent_student":
+            self.restore_and_save_teacher_model(m, starting_epoch)
 
-        for curr_epoch in xrange(starting_epoch, hparams.num_epochs):
-          tf.logging.info("Begin to run one epoch.........................................................................................................")
-          training_accuracy = self._run_training_loop(m, curr_epoch, server, sv)
-          #test_accuracy, train_accuracy = self._compute_final_accuracies(meval)
+          for curr_epoch in xrange(starting_epoch, hparams.num_epochs):
+            tf.logging.info("Begin to run one epoch.........................................................................................................")
+            #training_accuracy = self._run_training_loop(m, curr_epoch, server, sv)
+            training_accuracy = helper_utils.run_epoch_training(session, m, self.data_loader, curr_epoch)
+            #test_accuracy, train_accuracy = self._compute_final_accuracies(meval)
 
-          #test_accuracy_list.append(test_accuracy)
-          #train_accuracy_list.append(train_accuracy)
-          training_accuracy_list.append(training_accuracy)
-          tf.logging.info('Training Acc List: {}'.format(training_accuracy_list))
-          tf.logging.info('Train Acc List: {}'.format(train_accuracy_list))
-          tf.logging.info('Test Acc List: {}'.format(test_accuracy_list))
-          tf.logging.info("Finish one epoch.............................................................................")
-          #self.summary_train_writer.close()
+            #test_accuracy_list.append(test_accuracy)
+            #train_accuracy_list.append(train_accuracy)
+            training_accuracy_list.append(training_accuracy)
+            tf.logging.info('Training Acc List: {}'.format(training_accuracy_list))
+            tf.logging.info('Train Acc List: {}'.format(train_accuracy_list))
+            tf.logging.info('Test Acc List: {}'.format(test_accuracy_list))
+            tf.logging.info("Finish one epoch.............................................................................")
+            #self.summary_train_writer.close()
         sv.stop()
 
       end_time = time.time()
@@ -566,9 +568,9 @@ class CifarModelTrainer(object):
   def saver(self):
     return self._saver
 
-  @property
-  def session(self):
-    return self._session
+  # @property
+  # def session(self):
+  #   return self._session
 
   @property
   def num_trainable_params(self):

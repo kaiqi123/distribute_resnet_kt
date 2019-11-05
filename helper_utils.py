@@ -169,6 +169,7 @@ def show_accuracy_list(session, curr_epoch, model_train, training_accuracy_list,
 
     training_accuracy = calculate_training_accuracy(session, model_train)
     training_accuracy_list.append(float(training_accuracy))
+
     with open("accuracy/training_accuracy.json", 'w') as f:
         json.dump(training_accuracy_list, f)
 

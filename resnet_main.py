@@ -568,11 +568,11 @@ class CifarModelTrainer(object):
 
               training_accuracy = helper_utils.calculate_training_accuracy(session, m)
               training_accuracy_list.append(float(training_accuracy))
+              assert training_accuracy_list == curr_epoch
               with open("accuracy/training_accuracy.json", 'w') as f:
                 json.dump(training_accuracy_list, f)
 
               if FLAGS.task_index == 0:
-                assert training_accuracy_list == curr_epoch
                 tf.logging.info('Training Acc List: {}\n'.format(training_accuracy_list))
                 # tf.logging.info('Train Acc List: {}'.format(train_accuracy_list))
                 # tf.logging.info('Test Acc List: {}'.format(test_accuracy_list))

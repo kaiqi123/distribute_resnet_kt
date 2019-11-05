@@ -161,3 +161,15 @@ def calculate_training_accuracy(session, model):
         teacher_accuracy = session.run(model.teacher_model.accuracy)
         tf.logging.info('Teacher accuracy: {}'.format(teacher_accuracy))
     return training_accuracy
+
+def show_accuracy_list(session, curr_epoch, model_train, training_accuracy_list):
+    if curr_epoch != 1:
+        with open("accuracy/training_accuracy.json", 'r') as f:
+            training_accuracy_list = json.load(f)
+
+    training_accuracy = calculate_training_accuracy(session, model_train)
+    training_accuracy_list.append(float(training_accuracy))
+    with open("accuracy/training_accuracy.json", 'w') as f:
+        json.dump(training_accuracy_list, f)
+
+    return training_accuracy_list

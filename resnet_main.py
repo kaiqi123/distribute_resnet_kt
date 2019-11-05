@@ -506,24 +506,12 @@ class CifarModelTrainer(object):
             curr_step = helper_utils.run_iteration_training(session, m, self.data_loader, curr_step, steps_per_epoch)
 
             if curr_step!=0 and (curr_step % steps_per_epoch == 0 or curr_step == total_steps-1):
-
-              curr_epoch = int (curr_step / steps_per_epoch)
+              curr_epoch = int(curr_step / steps_per_epoch)
               tf.logging.info("curr_step: {}, curr_epoch: {}".format(curr_step, curr_epoch))
-
-              if curr_epoch != 1:
-                with open("accuracy/training_accuracy.json", 'r') as f:
-                  training_accuracy_list = json.load(f)
-
-              training_accuracy = helper_utils.calculate_training_accuracy(session, m)
-              training_accuracy_list.append(float(training_accuracy))
-              with open("accuracy/training_accuracy.json", 'w') as f:
-                json.dump(training_accuracy_list, f)
-
+              training_accuracy_list = helper_utils.show_accuracy_list(session, curr_epoch, m, training_accuracy_list)
               if FLAGS.task_index == 0:
-                #assert len(training_accuracy_list) == curr_epoch
+                # assert len(training_accuracy_list) == curr_epoch
                 tf.logging.info('Training Acc List: {}\n'.format(training_accuracy_list))
-                # tf.logging.info('Train Acc List: {}'.format(train_accuracy_list))
-                # tf.logging.info('Test Acc List: {}'.format(test_accuracy_list))
         sv.stop()
 
       end_time = time.time()

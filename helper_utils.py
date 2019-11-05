@@ -153,6 +153,7 @@ def run_iteration_training(session, model, data_loader, curr_step, steps_per_epo
           })
     else:
       raise EOFError("Not found model.type when training!")
+    print(step)
     return step
 
 def calculate_training_accuracy(session, model):

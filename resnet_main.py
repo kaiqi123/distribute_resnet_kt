@@ -320,7 +320,8 @@ class CifarModel(object):
       self.train_op = _build_train_op(self.hparams, self.lr_rate_ph, self.cost, self.global_step)
 
     #with tf.device('/cpu:0'):
-    self.saver = tf.train.Saver(max_to_keep=2)
+    #self.saver = tf.train.Saver(max_to_keep=2)
+    self.saver = tf.train.Saver()
 
     for var in tf.trainable_variables():
       tf.logging.info(var)
@@ -473,7 +474,7 @@ class CifarModelTrainer(object):
   @contextlib.contextmanager
   def _new_session(self, m, server=None):
     sv = tf.train.Supervisor(is_chief=(FLAGS.task_index == 0),
-                            logdir="./checkpoint/",
+                            logdir=FLAGS.checkpoint_dir,
                             init_op=m.init,
                             summary_op=None,
                             saver=m.saver,

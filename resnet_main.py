@@ -574,6 +574,7 @@ class CifarModelTrainer(object):
 
               if FLAGS.task_index == 0:
                 tf.logging.info('Training Acc List: {}\n'.format(training_accuracy_list))
+
                 # tf.logging.info('Train Acc List: {}'.format(train_accuracy_list))
                 # tf.logging.info('Test Acc List: {}'.format(test_accuracy_list))
         sv.stop()

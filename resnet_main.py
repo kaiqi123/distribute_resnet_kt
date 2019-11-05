@@ -134,7 +134,7 @@ class CifarModel(object):
       teacher_variables_to_restore = [var for var in tf.trainable_variables() if var.op.name.startswith("model/teacher_architecture")]
       self.teacher_saver = tf.train.Saver(teacher_variables_to_restore)
 
-    self.summary_op = self.summary_ops()
+    # self.summary_op = self.summary_ops()
     self.init = tf.group(tf.global_variables_initializer(), tf.local_variables_initializer())
 
   def summary_ops(self):
@@ -482,7 +482,7 @@ class CifarModelTrainer(object):
 
         with tf.device(tf.train.replica_device_setter(worker_device="/job:worker/task:%d" % FLAGS.task_index,cluster=cluster)):
           m = self._build_models()
-          #meval = self._build_models_eval()
+
 
         sv = tf.train.Supervisor(is_chief=(FLAGS.task_index == 0),
                                  logdir=FLAGS.checkpoint_dir,
@@ -491,6 +491,8 @@ class CifarModelTrainer(object):
                                  saver=m.saver,
                                  global_step=m.global_step,
                                  save_model_secs=400)
+
+        meval = self._build_models_eval()
 
         training_accuracy_list = []
         train_accuracy_list = []
@@ -518,11 +520,12 @@ class CifarModelTrainer(object):
             if curr_step!=0 and (curr_step % steps_per_epoch == 0 or curr_step == total_steps-1):
               curr_epoch = int(curr_step / steps_per_epoch)
               tf.logging.info("curr_step: {}, curr_epoch: {}".format(curr_step, curr_epoch))
-              training_accuracy_list = helper_utils.show_accuracy_list(session, curr_epoch, m, training_accuracy_list, train_accuracy_list, test_accuracy_list)
+              training_accuracy_list = helper_utils.show_accuracy_list(session, curr_epoch, m, meval, self.data_loader, training_accuracy_list, train_accuracy_list, test_accuracy_list)
               if FLAGS.task_index == 0:
                 # assert len(training_accuracy_list) == curr_epoch
-                tf.logging.info('Training Acc List: {}\n'.format(training_accuracy_list))
-              tf.logging.info('Epoch time(min): {}'.format((time.time() - start_epoch_time) / 60.0))
+                tf.logging.info('Training Acc List: {}'.format(training_accuracy_list))
+
+              tf.logging.info('Epoch time(min): {}\n'.format((time.time() - start_epoch_time) / 60.0))
               start_epoch_time = time.time()
         sv.stop()
 

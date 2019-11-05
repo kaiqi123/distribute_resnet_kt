@@ -506,13 +506,8 @@ class CifarModelTrainer(object):
         tf.logging.info("Total_steps {}".format(total_steps))
 
         with sv.prepare_or_wait_for_session(server.target) as session:
-          if m.type == "dependent_student":
-            self.restore_and_save_teacher_model(m, starting_epoch)
-
-          #for curr_epoch in xrange(starting_epoch, hparams.num_epochs):
           start_epoch_time = time.time()
           while curr_step < total_steps:
-            #training_accuracy = self._run_training_loop(m, curr_epoch, server, sv)
             curr_step = helper_utils.run_iteration_training(session, m, self.data_loader, curr_step, total_steps)
 
             if curr_step!=0 and (curr_step % steps_per_epoch == 0 or curr_step == total_steps-1):
@@ -520,7 +515,6 @@ class CifarModelTrainer(object):
               tf.logging.info("curr_step: {}, curr_epoch: {}".format(curr_step, curr_epoch))
               training_accuracy_list = helper_utils.show_accuracy_list(session, curr_epoch, m, self.data_loader, training_accuracy_list, train_accuracy_list, test_accuracy_list)
               if FLAGS.task_index == 0:
-                # assert len(training_accuracy_list) == curr_epoch
                 tf.logging.info('Training Acc List: {}'.format(training_accuracy_list))
 
               tf.logging.info('Epoch time(min): {}\n'.format((time.time() - start_epoch_time) / 60.0))
@@ -561,7 +555,7 @@ def main(_):
 
   if 'wrn' in FLAGS.model_name:
     hparams.add_hparam('model_name', str(FLAGS.model_name))
-    hparams.add_hparam('num_epochs', 5)
+    hparams.add_hparam('num_epochs', 200)
     hparams.add_hparam('wrn_size', 160)
     hparams.add_hparam('lr', 0.1)
     hparams.add_hparam('weight_decay_rate', 5e-4)

@@ -541,6 +541,7 @@ class CifarModelTrainer(object):
         #starting_epoch = self._calc_starting_epoch(m, server)
         curr_step = 0
         steps_per_epoch = int(hparams.train_size / hparams.batch_size)
+        steps_per_epoch = 10
         total_steps = hparams.num_epochs * steps_per_epoch
         tf.logging.info('Steps per epoch: {}'.format(steps_per_epoch))
         tf.logging.info("Total_steps {}".format(total_steps))

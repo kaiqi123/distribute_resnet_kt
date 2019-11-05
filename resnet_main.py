@@ -557,20 +557,16 @@ class CifarModelTrainer(object):
             #training_accuracy = self._run_training_loop(m, curr_epoch, server, sv)
             curr_step = helper_utils.run_iteration_training(session, m, self.data_loader, curr_step, steps_per_epoch)
 
-            if curr_step % steps_per_epoch == 0 or curr_step == total_steps-1:
+            if curr_step!=0 and (curr_step % steps_per_epoch == 0 or curr_step == total_steps-1):
 
-              if curr_step != 0:
+              curr_epoch = int (curr_step / steps_per_epoch)
+              if curr_step != 1:
                 with open("accuracy/training_accuracy.json", 'r') as f:
                   training_accuracy_list = json.load(f)
 
-              print(len(training_accuracy_list), training_accuracy_list)
-              curr_epoch = int (curr_step / steps_per_epoch)
-              training_accuracy = helper_utils.calculate_training_accuracy(session,m)
-              #test_accuracy, train_accuracy = self._compute_final_accuracies(meval)
-
+              training_accuracy = helper_utils.calculate_training_accuracy(session, m)
               training_accuracy_list.append(training_accuracy)
-              print(len(training_accuracy_list), curr_epoch)
-
+              print(len(training_accuracy_list), training_accuracy_list)
               with open("accuracy/training_accuracy.json", 'w') as f:
                 json.dump(training_accuracy_list, f)
 

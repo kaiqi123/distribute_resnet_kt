@@ -482,7 +482,7 @@ class CifarModelTrainer(object):
                                  saver=m.saver,
                                  global_step=m.global_step,
                                  save_model_secs=400)
-        #starting_epoch = self._calc_starting_epoch(m, server)
+
         # test_accuracy_list = []
         # train_accuracy_list = []
         training_accuracy_list = []

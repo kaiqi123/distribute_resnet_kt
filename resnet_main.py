@@ -493,8 +493,8 @@ class CifarModelTrainer(object):
         tf.logging.info('Steps per epoch: {}'.format(steps_per_epoch))
         tf.logging.info("Total_steps {}".format(total_steps))
 
-        steps_per_epoch = 10
-        total_steps = 200
+        #steps_per_epoch = 10
+        #total_steps = 200
 
         with sv.prepare_or_wait_for_session(server.target) as session:
           if m.type == "dependent_student":

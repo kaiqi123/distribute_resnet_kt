@@ -129,7 +129,7 @@ def run_iteration_training(session, model, data_loader, curr_step, total_steps):
     curr_lr = get_lr(hparams=model.hparams, t_cur=curr_step)
     model.lr_rate_ph.load(curr_lr, session=session)
 
-    if curr_step % 1 == 0:
+    if curr_step % 20 == 0:
         tf.logging.info('Training {}/{}, lr {}'.format(curr_step, total_steps, curr_lr))
 
     if model.type == "dependent_student":

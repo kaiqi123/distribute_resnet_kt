@@ -545,7 +545,6 @@ class CifarModelTrainer(object):
             self.restore_and_save_teacher_model(m, starting_epoch)
 
           for curr_epoch in xrange(starting_epoch, hparams.num_epochs):
-            tf.logging.info("Begin to run one epoch.........................................................................................................")
             #training_accuracy = self._run_training_loop(m, curr_epoch, server, sv)
             training_accuracy = helper_utils.run_epoch_training(session, m, self.data_loader, curr_epoch)
             #test_accuracy, train_accuracy = self._compute_final_accuracies(meval)
@@ -556,7 +555,7 @@ class CifarModelTrainer(object):
             tf.logging.info('Training Acc List: {}'.format(training_accuracy_list))
             tf.logging.info('Train Acc List: {}'.format(train_accuracy_list))
             tf.logging.info('Test Acc List: {}'.format(test_accuracy_list))
-            tf.logging.info("Finish one epoch.............................................................................")
+            tf.logging.info("Finish one epoch")
             #self.summary_train_writer.close()
         sv.stop()
 

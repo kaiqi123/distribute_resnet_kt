@@ -138,6 +138,11 @@ student_avg_num0filters_dict_toatalEpochs = {"group1_block0_sub1_relu":[], "grou
 
 count_cosine_lists = [[],[],[]]
 def run_epoch_training(session, model, data_loader, curr_epoch):
+
+  # Get the current learning rate for the model based on the current epoch
+  curr_lr = get_lr(curr_epoch, model.hparams, iteration=0)
+  tf.logging.info('lr of {} for epoch {}'.format(curr_lr, curr_epoch))
+
   steps_per_epoch = int(model.hparams.train_size / model.hparams.batch_size)
   steps_per_epoch = 10
   tf.logging.info('steps per epoch: {}'.format(steps_per_epoch))
@@ -145,17 +150,13 @@ def run_epoch_training(session, model, data_loader, curr_epoch):
   print(curr_step)
   #assert curr_step % steps_per_epoch == 0
 
-  # Get the current learning rate for the model based on the current epoch
-  curr_lr = get_lr(curr_epoch, model.hparams, iteration=0)
-  tf.logging.info('lr of {} for epoch {}'.format(curr_lr, curr_epoch))
-
   # init avg_num0filters_dict_perEpoch, key the same as student_avg_num0filters_dict_toatalEpochs, value is []
   # if model.type == "independent_student":
   #     avg_num0filters_dict_perEpoch = {}
   #     for key in student_avg_num0filters_dict_toatalEpochs.keys():
   #         avg_num0filters_dict_perEpoch[key] = []
 
-  step = 0
+  step = curr_step
   while step < curr_step+steps_per_epoch:
 
     if step % 1 == 0:

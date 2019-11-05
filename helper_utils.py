@@ -161,9 +161,9 @@ def run_epoch_training(session, model, data_loader, curr_epoch):
 
     train_images, train_labels = data_loader.next_batch()
 
-    # curr_lr = get_lr(curr_epoch, model.hparams, iteration=(step + 1))
-    # print("curr_lr: {}".format(curr_lr))
-    # model.lr_rate_ph.load(curr_lr)
+    curr_lr = get_lr(curr_epoch, model.hparams, iteration=(step + 1))
+    print("curr_lr: {}".format(curr_lr))
+    model.lr_rate_ph.load(curr_lr)
 
     if model.type == "dependent_student":
 

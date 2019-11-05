@@ -9,7 +9,8 @@ while step<3:
             test_accuracy = json.load(f)
         print(len(test_accuracy), test_accuracy)
 
-    training_accuracy_list.append(float(step))
+    training_accuracy_list.append(float(0.130859375))
+    print(type(float(0.130859375)))
     print(len(training_accuracy_list), step)
 
     with open("training_accuracy.json", 'w') as f:

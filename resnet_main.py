@@ -566,7 +566,7 @@ class CifarModelTrainer(object):
                   training_accuracy_list = json.load(f)
 
               training_accuracy = helper_utils.calculate_training_accuracy(session, m)
-              training_accuracy_list.append(training_accuracy)
+              training_accuracy_list.append(float(training_accuracy))
               print(len(training_accuracy_list), training_accuracy_list)
               with open("accuracy/training_accuracy.json", 'w') as f:
                 json.dump(training_accuracy_list, f)

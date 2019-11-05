@@ -155,14 +155,16 @@ def run_epoch_training(session, model, data_loader, curr_epoch):
 
   step = 0
   while step < steps_per_epoch:
-    curr_lr = get_lr(curr_epoch, model.hparams, iteration=(step + 1))
-    print("curr_lr: {}".format(curr_lr))
-    #model.lr_rate_ph.load(curr_lr, session=session)
 
     if step % 1 == 0:
         tf.logging.info('Training {}/{}'.format(step, steps_per_epoch))
 
     train_images, train_labels = data_loader.next_batch()
+
+    curr_lr = get_lr(curr_epoch, model.hparams, iteration=(step + 1))
+    print("curr_lr: {}".format(curr_lr))
+    model.lr_rate_ph.assign(curr_lr)
+
     if model.type == "dependent_student":
 
       # for cosine similarity

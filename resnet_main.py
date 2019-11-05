@@ -482,6 +482,7 @@ class CifarModelTrainer(object):
 
         with tf.device(tf.train.replica_device_setter(worker_device="/job:worker/task:%d" % FLAGS.task_index,cluster=cluster)):
           m = self._build_models()
+          #meval = self._build_models_eval()
 
 
         sv = tf.train.Supervisor(is_chief=(FLAGS.task_index == 0),
@@ -492,7 +493,6 @@ class CifarModelTrainer(object):
                                  global_step=m.global_step,
                                  save_model_secs=400)
 
-        meval = self._build_models_eval()
 
         training_accuracy_list = []
         train_accuracy_list = []
@@ -520,7 +520,7 @@ class CifarModelTrainer(object):
             if curr_step!=0 and (curr_step % steps_per_epoch == 0 or curr_step == total_steps-1):
               curr_epoch = int(curr_step / steps_per_epoch)
               tf.logging.info("curr_step: {}, curr_epoch: {}".format(curr_step, curr_epoch))
-              training_accuracy_list = helper_utils.show_accuracy_list(session, curr_epoch, m, meval, self.data_loader, training_accuracy_list, train_accuracy_list, test_accuracy_list)
+              training_accuracy_list = helper_utils.show_accuracy_list(session, curr_epoch, m, self.data_loader, training_accuracy_list, train_accuracy_list, test_accuracy_list)
               if FLAGS.task_index == 0:
                 # assert len(training_accuracy_list) == curr_epoch
                 tf.logging.info('Training Acc List: {}'.format(training_accuracy_list))

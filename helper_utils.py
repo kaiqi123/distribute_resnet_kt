@@ -124,13 +124,13 @@ def get_lr(hparams, t_cur=None):
   """
   return lr
 
-def run_iteration_training(session, model, data_loader, curr_step, steps_per_epoch):
+def run_iteration_training(session, model, data_loader, curr_step, total_steps):
     train_images, train_labels = data_loader.next_batch()
     curr_lr = get_lr(hparams=model.hparams, t_cur=curr_step)
     model.lr_rate_ph.load(curr_lr, session=session)
 
     if curr_step % 1 == 0:
-        tf.logging.info('Training {}/{}, lr {}'.format(curr_step, steps_per_epoch, curr_lr))
+        tf.logging.info('Training {}/{}, lr {}'.format(curr_step, total_steps, curr_lr))
 
     if model.type == "dependent_student":
       _, step, eval_op, teacher_eval_op, summary = session.run(

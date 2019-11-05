@@ -561,7 +561,7 @@ class CifarModelTrainer(object):
 
               curr_epoch = int (curr_step / steps_per_epoch)
               tf.logging.info("curr_step: {}, curr_epoch: {}".format(curr_step, curr_epoch))
-              if curr_step != 1:
+              if curr_epoch != 1:
                 with open("accuracy/training_accuracy.json", 'r') as f:
                   training_accuracy_list = json.load(f)
 

@@ -134,7 +134,7 @@ class CifarModel(object):
       teacher_variables_to_restore = [var for var in tf.trainable_variables() if var.op.name.startswith("model/teacher_architecture")]
       self.teacher_saver = tf.train.Saver(teacher_variables_to_restore)
 
-    # self.summary_op = self.summary_ops()
+    self.summary_op = self.summary_ops()
     self.init = tf.group(tf.global_variables_initializer(), tf.local_variables_initializer())
 
   def summary_ops(self):

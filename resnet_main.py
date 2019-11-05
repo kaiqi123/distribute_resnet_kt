@@ -472,27 +472,20 @@ class CifarModelTrainer(object):
     return starting_epoch
 
   @contextlib.contextmanager
-  def _new_session(self, m, server=None):
-    sv = tf.train.Supervisor(is_chief=(FLAGS.task_index == 0),
-                            logdir=FLAGS.checkpoint_dir,
-                            init_op=m.init,
-                            summary_op=None,
-                            saver=m.saver,
-                            global_step=m.global_step,
-                            save_model_secs=60)
+  def _new_session(self, m, server, sv):
+
     self._session = sv.prepare_or_wait_for_session(server.target)
     try:
       yield
     finally:
-      #sv.stop()
       tf.Session.reset(server.target)
       self._session = None
 
-  def _run_training_loop(self, m, curr_epoch, server):
+  def _run_training_loop(self, m, curr_epoch, server, sv):
     start_time = time.time()
     while True:
       try:
-        with self._new_session(m, server):
+        with self._new_session(m, server, sv):
           #self.init_save_log_writer()
           #train_accuracy = helper_utils.run_epoch_training(self.session, m, self.data_loader, curr_epoch, self.summary_train_writer)
           train_accuracy = helper_utils.run_epoch_training(self.session, m, self.data_loader, curr_epoch)
@@ -519,7 +512,6 @@ class CifarModelTrainer(object):
 
 
   def run_model(self):
-    start_time = time.time()
     hparams = self.hparams
 
     # for distribute
@@ -531,6 +523,7 @@ class CifarModelTrainer(object):
     if FLAGS.job_name == "ps":
       server.join()
     elif FLAGS.job_name == "worker":
+      start_time = time.time()
 
       # Build the graph
       with tf.Graph().as_default():
@@ -538,6 +531,13 @@ class CifarModelTrainer(object):
         with tf.device(tf.train.replica_device_setter(worker_device="/job:worker/task:%d" % FLAGS.task_index,cluster=cluster)):
           m = self._build_models()
 
+        sv = tf.train.Supervisor(is_chief=(FLAGS.task_index == 0),
+                                 logdir=FLAGS.checkpoint_dir,
+                                 init_op=m.init,
+                                 summary_op=None,
+                                 saver=m.saver,
+                                 global_step=m.global_step,
+                                 save_model_secs=60)
         #starting_epoch = self._calc_starting_epoch(m, server)
         starting_epoch = 0
         if m.type == "dependent_student":
@@ -545,7 +545,7 @@ class CifarModelTrainer(object):
 
         for curr_epoch in xrange(starting_epoch, hparams.num_epochs):
           tf.logging.info("Begin to run one epoch.........................................................................................................")
-          training_accuracy = self._run_training_loop(m, curr_epoch, server)
+          training_accuracy = self._run_training_loop(m, curr_epoch, server, sv)
           #test_accuracy, train_accuracy = self._compute_final_accuracies(meval)
 
           #test_accuracy_list.append(test_accuracy)
@@ -556,10 +556,11 @@ class CifarModelTrainer(object):
           tf.logging.info('Test Acc List: {}'.format(test_accuracy_list))
           tf.logging.info("Finish one epoch.............................................................................")
           #self.summary_train_writer.close()
+        sv.stop()
 
-    end_time = time.time()
-    runtime = round((end_time - start_time) / (60 * 60), 2)
-    tf.logging.info("run time is: " + str(runtime) + " hour")
+      end_time = time.time()
+      runtime = round((end_time - start_time) / (60 * 60), 2)
+      tf.logging.info("run time is: " + str(runtime) + " hour")
 
   @property
   def saver(self):

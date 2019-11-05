@@ -539,24 +539,34 @@ class CifarModelTrainer(object):
                                  global_step=m.global_step,
                                  save_model_secs=60)
         #starting_epoch = self._calc_starting_epoch(m, server)
-        starting_epoch = 0
+        curr_step = 0
+        steps_per_epoch = int(m.hparams.train_size / m.hparams.batch_size)
+        total_steps = hparams.num_epochs * steps_per_epoch
+        tf.logging.info("Steps_per_epoch：　{}".format(steps_per_epoch))
+        tf.logging.info("Total_steps：　{}".format(total_steps))
+
         with sv.prepare_or_wait_for_session(server.target) as session:
           if m.type == "dependent_student":
             self.restore_and_save_teacher_model(m, starting_epoch)
 
-          for curr_epoch in xrange(starting_epoch, hparams.num_epochs):
+          #for curr_epoch in xrange(starting_epoch, hparams.num_epochs):
+          while curr_step < total_steps:
             #training_accuracy = self._run_training_loop(m, curr_epoch, server, sv)
-            training_accuracy = helper_utils.run_epoch_training(session, m, self.data_loader, curr_epoch)
-            #test_accuracy, train_accuracy = self._compute_final_accuracies(meval)
+            helper_utils.run_iteration_training(session, m, self.data_loader, curr_step, steps_per_epoch)
 
-            #test_accuracy_list.append(test_accuracy)
-            #train_accuracy_list.append(train_accuracy)
-            training_accuracy_list.append(training_accuracy)
-            tf.logging.info('Training Acc List: {}'.format(training_accuracy_list))
-            tf.logging.info('Train Acc List: {}'.format(train_accuracy_list))
-            tf.logging.info('Test Acc List: {}'.format(test_accuracy_list))
-            tf.logging.info("Finish one epoch")
-            #self.summary_train_writer.close()
+            if FLAGS.task_index == 0:
+              if curr_step % steps_per_epoch == 0 or curr_step == total_steps-1:
+                curr_epoch = int (curr_step / steps_per_epoch)
+                training_accuracy = helper_utils.calculate_training_accuracy(session,m)
+                #test_accuracy, train_accuracy = self._compute_final_accuracies(meval)
+
+                training_accuracy_list.append(training_accuracy)
+                #test_accuracy_list.append(test_accuracy)
+                #train_accuracy_list.append(train_accuracy)
+                tf.logging.info('Training Acc List: {}'.format(training_accuracy_list))
+                tf.logging.info('Train Acc List: {}'.format(train_accuracy_list))
+                tf.logging.info('Test Acc List: {}'.format(test_accuracy_list))
+                tf.logging.info("Finish epoch {}".format(curr_epoch))
         sv.stop()
 
       end_time = time.time()

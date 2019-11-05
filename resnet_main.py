@@ -553,7 +553,7 @@ class CifarModelTrainer(object):
           #for curr_epoch in xrange(starting_epoch, hparams.num_epochs):
           while curr_step < total_steps:
             #training_accuracy = self._run_training_loop(m, curr_epoch, server, sv)
-            helper_utils.run_iteration_training(session, m, self.data_loader, curr_step, steps_per_epoch)
+            curr_step = helper_utils.run_iteration_training(session, m, self.data_loader, curr_step, steps_per_epoch)
 
             if FLAGS.task_index == 0:
               if curr_step % steps_per_epoch == 0 or curr_step == total_steps-1:

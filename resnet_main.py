@@ -455,58 +455,6 @@ class CifarModelTrainer(object):
         meval.build('eval')
       return m, meval
 
-  def _calc_starting_epoch(self, m, server):
-    """Calculates the starting epoch for model m based on global step."""
-    hparams = self.hparams
-    batch_size = hparams.batch_size
-    steps_per_epoch = int(hparams.train_size / batch_size)
-    with self._new_session(m, server):
-      curr_step = self.session.run(m.global_step)
-    total_steps = steps_per_epoch * hparams.num_epochs
-    epochs_left = (total_steps - curr_step) // steps_per_epoch
-    starting_epoch = hparams.num_epochs - epochs_left
-    return starting_epoch
-
-  @contextlib.contextmanager
-  def _new_session(self, m, server, sv):
-
-    self._session = sv.prepare_or_wait_for_session(server.target)
-    try:
-      yield
-    finally:
-      tf.Session.reset(server.target)
-      self._session = None
-
-  def _run_training_loop(self, m, curr_epoch, server, sv):
-    start_time = time.time()
-    while True:
-      try:
-        with self._new_session(m, server, sv):
-          #self.init_save_log_writer()
-          #train_accuracy = helper_utils.run_epoch_training(self.session, m, self.data_loader, curr_epoch, self.summary_train_writer)
-          train_accuracy = helper_utils.run_epoch_training(self.session, m, self.data_loader, curr_epoch)
-          #tf.logging.info('Saving model after epoch...')
-          #self.save_model(step=curr_epoch)
-          break
-      except (tf.errors.AbortedError, tf.errors.UnavailableError) as e:
-        tf.logging.info('Retryable error caught: %s.  Retrying.', e)
-    tf.logging.info('Finish training epoch: {}'.format(curr_epoch))
-    tf.logging.info('Epoch time(min): {}'.format((time.time() - start_time) / 60.0))
-    return train_accuracy
-
-  # def _run_training_loop(self, m, curr_epoch, server):
-  #   start_time = time.time()
-  #   self.session = tf.train.MonitoredTrainingSession(master=server.target,
-  #                                                     is_chief=(FLAGS.task_index == 0),
-  #                                                     checkpoint_dir=FLAGS.checkpoint_dir
-  #                                                     )
-  #   train_accuracy = helper_utils.run_epoch_training(self.session, m, self.data_loader, curr_epoch)
-  #   tf.logging.info('Saving model after epoch...')
-  #   tf.logging.info('Finish training epoch: {}'.format(curr_epoch))
-  #   tf.logging.info('Epoch time(min): {}'.format((time.time() - start_time) / 60.0))
-  #   return train_accuracy
-
-
   def run_model(self):
     hparams = self.hparams
 
@@ -572,7 +520,7 @@ class CifarModelTrainer(object):
                 json.dump(training_accuracy_list, f)
 
               if FLAGS.task_index == 0:
-                assert len(training_accuracy_list) == curr_epoch
+                #assert len(training_accuracy_list) == curr_epoch
                 tf.logging.info('Training Acc List: {}\n'.format(training_accuracy_list))
                 # tf.logging.info('Train Acc List: {}'.format(train_accuracy_list))
                 # tf.logging.info('Test Acc List: {}'.format(test_accuracy_list))

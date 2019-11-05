@@ -561,21 +561,21 @@ class CifarModelTrainer(object):
 
               curr_epoch = int (curr_step / steps_per_epoch)
               tf.logging.info("curr_step: {}, curr_epoch: {}".format(curr_step, curr_epoch))
+
               if curr_epoch != 1:
                 with open("accuracy/training_accuracy.json", 'r') as f:
                   training_accuracy_list = json.load(f)
 
               training_accuracy = helper_utils.calculate_training_accuracy(session, m)
               training_accuracy_list.append(float(training_accuracy))
-              print(len(training_accuracy_list), training_accuracy_list)
               with open("accuracy/training_accuracy.json", 'w') as f:
                 json.dump(training_accuracy_list, f)
 
               if FLAGS.task_index == 0:
-                tf.logging.info('Training Acc List: {}'.format(training_accuracy_list))
+                assert training_accuracy_list == curr_epoch
+                tf.logging.info('Training Acc List: {}\n'.format(training_accuracy_list))
                 # tf.logging.info('Train Acc List: {}'.format(train_accuracy_list))
                 # tf.logging.info('Test Acc List: {}'.format(test_accuracy_list))
-                tf.logging.info("Finish epoch {}".format(curr_epoch))
         sv.stop()
 
       end_time = time.time()

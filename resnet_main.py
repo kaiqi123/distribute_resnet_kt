@@ -537,7 +537,7 @@ class CifarModelTrainer(object):
                                  summary_op=None,
                                  saver=m.saver,
                                  global_step=m.global_step,
-                                 save_model_secs=60)
+                                 save_model_secs=400)
         #starting_epoch = self._calc_starting_epoch(m, server)
         curr_step = 0
         steps_per_epoch = int(hparams.train_size / hparams.batch_size)

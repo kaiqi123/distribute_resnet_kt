@@ -510,6 +510,7 @@ class CifarModelTrainer(object):
             self.restore_and_save_teacher_model(m, starting_epoch)
 
           #for curr_epoch in xrange(starting_epoch, hparams.num_epochs):
+          start_epoch_time = time.time()
           while curr_step < total_steps:
             #training_accuracy = self._run_training_loop(m, curr_epoch, server, sv)
             curr_step = helper_utils.run_iteration_training(session, m, self.data_loader, curr_step, total_steps)
@@ -521,6 +522,8 @@ class CifarModelTrainer(object):
               if FLAGS.task_index == 0:
                 # assert len(training_accuracy_list) == curr_epoch
                 tf.logging.info('Training Acc List: {}\n'.format(training_accuracy_list))
+              tf.logging.info('Epoch time(min): {}'.format((time.time() - start_epoch_time) / 60.0))
+              start_epoch_time = time.time()
         sv.stop()
 
       end_time = time.time()

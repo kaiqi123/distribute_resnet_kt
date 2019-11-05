@@ -140,8 +140,8 @@ count_cosine_lists = [[],[],[]]
 def run_epoch_training(session, model, data_loader, curr_epoch):
   steps_per_epoch = int(model.hparams.train_size / model.hparams.batch_size)
   tf.logging.info('steps per epoch: {}'.format(steps_per_epoch))
-  #curr_step = session.run(model.global_step)
-  #assert curr_step % steps_per_epoch == 0
+  curr_step = session.run(model.global_step)
+  assert curr_step % steps_per_epoch == 0
 
   # Get the current learning rate for the model based on the current epoch
   curr_lr = get_lr(curr_epoch, model.hparams, iteration=0)

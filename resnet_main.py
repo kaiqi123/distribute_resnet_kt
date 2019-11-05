@@ -472,9 +472,6 @@ class CifarModelTrainer(object):
 
   @contextlib.contextmanager
   def _new_session(self, m, server=None):
-    # self._session = tf.train.MonitoredTrainingSession(master=server.target,
-    #                                   is_chief=(FLAGS.task_index == 0),
-    #                                   checkpoint_dir=FLAGS.checkpoint_dir)
     sv = tf.train.Supervisor(is_chief=(FLAGS.task_index == 0),
                             logdir="./checkpoint/",
                             init_op=m.init,
@@ -486,7 +483,7 @@ class CifarModelTrainer(object):
     try:
       yield
     finally:
-      #sv.stop()
+      sv.stop()
       tf.Session.reset(server.target)
       self._session = None
 

@@ -6,7 +6,7 @@ import contextlib
 import logging
 import os
 import time
-
+import json
 import numpy as np
 import tensorflow as tf
 
@@ -541,10 +541,12 @@ class CifarModelTrainer(object):
         #starting_epoch = self._calc_starting_epoch(m, server)
         curr_step = 0
         steps_per_epoch = int(hparams.train_size / hparams.batch_size)
-        steps_per_epoch = 10
         total_steps = hparams.num_epochs * steps_per_epoch
         tf.logging.info('Steps per epoch: {}'.format(steps_per_epoch))
         tf.logging.info("Total_steps {}".format(total_steps))
+
+        steps_per_epoch = 10
+        total_steps = 200
 
         with sv.prepare_or_wait_for_session(server.target) as session:
           if m.type == "dependent_student":
@@ -555,15 +557,28 @@ class CifarModelTrainer(object):
             #training_accuracy = self._run_training_loop(m, curr_epoch, server, sv)
             curr_step = helper_utils.run_iteration_training(session, m, self.data_loader, curr_step, steps_per_epoch)
 
-            if FLAGS.task_index == 0:
-              if curr_step % steps_per_epoch == 0 or curr_step == total_steps-1:
-                curr_epoch = int (curr_step / steps_per_epoch)
-                training_accuracy = helper_utils.calculate_training_accuracy(session,m)
-                #test_accuracy, train_accuracy = self._compute_final_accuracies(meval)
+            if curr_step % steps_per_epoch == 0 or curr_step == total_steps-1:
 
-                training_accuracy_list.append(training_accuracy)
-                #test_accuracy_list.append(test_accuracy)
-                #train_accuracy_list.append(train_accuracy)
+              if curr_step != 0:
+                f = open("accuracy/training_accuracy.txt", 'r')
+                test_accuracy = json.load(f.readlines())
+                print(len(test_accuracy), test_accuracy)
+                f.close()
+
+              curr_epoch = int (curr_step / steps_per_epoch)
+              training_accuracy = helper_utils.calculate_training_accuracy(session,m)
+              #test_accuracy, train_accuracy = self._compute_final_accuracies(meval)
+
+              training_accuracy_list.append(training_accuracy)
+              # test_accuracy_list.append(test_accuracy)
+              # train_accuracy_list.append(train_accuracy)
+              print(len(training_accuracy_list), curr_epoch)
+
+              f = open("accuracy/training_accuracy.txt", 'w')
+              f.write(training_accuracy_list)
+              f.close()
+
+              if FLAGS.task_index == 0:
                 tf.logging.info('Training Acc List: {}'.format(training_accuracy_list))
                 tf.logging.info('Train Acc List: {}'.format(train_accuracy_list))
                 tf.logging.info('Test Acc List: {}'.format(test_accuracy_list))

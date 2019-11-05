@@ -537,7 +537,7 @@ class CifarModelTrainer(object):
         #starting_epoch = self._calc_starting_epoch(m, server)
         # test_accuracy_list = []
         # train_accuracy_list = []
-        # training_accuracy_list = []
+        training_accuracy_list = []
 
         curr_step = 0
         steps_per_epoch = int(hparams.train_size / hparams.batch_size)
@@ -565,7 +565,6 @@ class CifarModelTrainer(object):
                 with open("accuracy/training_accuracy.json", 'r') as f:
                   training_accuracy_list = json.load(f)
 
-              training_accuracy_list = []
               training_accuracy = helper_utils.calculate_training_accuracy(session, m)
               training_accuracy_list.append(training_accuracy)
               print(len(training_accuracy_list), training_accuracy_list)

@@ -484,7 +484,7 @@ class CifarModelTrainer(object):
     try:
       yield
     finally:
-      sv.stop()
+      #sv.stop()
       tf.Session.reset(server.target)
       self._session = None
 

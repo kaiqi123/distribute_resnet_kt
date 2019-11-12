@@ -3,7 +3,17 @@ from __future__ import division
 from __future__ import print_function
 
 import contextlib
-import logging
+try:
+    from contextlib import nested
+except ImportError:
+    from contextlib import ExitStack, contextmanager
+    @contextmanager
+    def nested(*contexts):
+        with ExitStack() as stack:
+            for ctx in contexts:
+                stack.enter_context(ctx)
+            yield contexts
+# import logging
 import os
 import time
 import json

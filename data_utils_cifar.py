@@ -3,13 +3,15 @@ from __future__ import division
 from __future__ import print_function
 
 import copy
-import cPickle
 import os
 import augmentation_transforms
 import numpy as np
 import policies as found_policies
 import tensorflow as tf
-
+try:
+  import cPickle
+except ImportError:
+  import _pickle as cPickle
 
 class DataSetCifar(object):
 
@@ -382,8 +384,12 @@ class DataSetCifar(object):
     self.curr_train_index = 0
 
 def unpickle(f):
-  tf.logging.info('loading file: {}'.format(f))
-  fo = tf.gfile.Open(f, 'r')
-  d = cPickle.load(fo)
+  print('loading file: {}'.format(f))
+  try:
+    fo = tf.gfile.Open(f, 'r')
+    d = cPickle.load(fo)
+  except UnicodeDecodeError:
+    fo = tf.gfile.Open(f, 'rb')
+    d = cPickle.load(fo, encoding='latin1')
   fo.close()
   return d

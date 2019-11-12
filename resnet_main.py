@@ -80,7 +80,7 @@ def setup_arg_scopes(is_training):
 
 def build_model(inputs, num_classes, is_training, hparams, type, teacher_model=None):
   scopes = setup_arg_scopes(is_training)
-  with nested(*scopes):
+  with  nested(*scopes):
     if type == "teacher":
       if hparams.teacher_model_name == 'teacher_wrn_w1d40':
         logits, output_dict = build_wrn_model_teacher(inputs, num_classes, wrn_size=16*1, num_blocks_per_resnet=6)

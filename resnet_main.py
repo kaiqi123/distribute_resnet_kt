@@ -480,7 +480,7 @@ class CifarModelTrainer(object):
       # Build the graph
       with tf.Graph().as_default():
 
-        with tf.device(tf.train.replica_device_setter(worker_device="/job:worker/task:%d" % FLAGS.task_index,cluster=cluster)):
+        with tf.device(tf.train.replica_device_setter(worker_device="/gpu:%d" % FLAGS.task_index,cluster=cluster)):
           m = self._build_models()
           #meval = self._build_models_eval()
 

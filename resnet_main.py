@@ -57,11 +57,11 @@ tf.flags.DEFINE_integer("task_index", 0, "Index of task within the job")
 FLAGS = tf.flags.FLAGS
 arg_scope = tf.contrib.framework.arg_scope
 
-logName = "./logs/"+str(FLAGS.checkpoint_dir).split("/")[2]+".log"
-if not os.path.exists(logName):
-    os.system(r"touch {}".format(logName))
-logging.basicConfig(filename=logName,level=logging.DEBUG)
-logging.FileHandler(logName, mode='w')
+# logName = "./logs/"+str(FLAGS.checkpoint_dir).split("/")[2]+".log"
+# if not os.path.exists(logName):
+#     os.system(r"touch {}".format(logName))
+# logging.basicConfig(filename=logName,level=logging.DEBUG)
+# logging.FileHandler(logName, mode='w')
 
 
 def setup_arg_scopes(is_training):

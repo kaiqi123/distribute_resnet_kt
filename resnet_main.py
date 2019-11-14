@@ -584,8 +584,8 @@ class CifarModelTrainer(object):
             tf.logging.info("curr_step: {}, curr_epoch: {}".format(curr_step, curr_epoch))
 
             training_accuracy_value = session.run(train_accuracy)
-            train_accuracy_value = helper_utils.eval_child_model(session, hparams, test_eval_op, test_accuracy, self.data_loader, 'eval_train')
-            test_accuracy_value = helper_utils.eval_child_model(session, hparams, test_eval_op, test_accuracy, self.data_loader, 'test')
+            train_accuracy_value = helper_utils.eval_child_model(FLAGS.num_gpus, session, hparams, test_eval_op, test_accuracy, self.data_loader, 'eval_train')
+            test_accuracy_value = helper_utils.eval_child_model(FLAGS.num_gpus, session, hparams, test_eval_op, test_accuracy, self.data_loader, 'test')
 
             training_accuracy_list.append(training_accuracy_value)
             train_accuracy_list.append(train_accuracy_value)

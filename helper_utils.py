@@ -56,7 +56,7 @@ def decay_weights(cost, weight_decay_rate):
 #   tf.logging.info('length of images is {}'.format(len(images)))
 #   return accuracy
 
-def eval_child_model(session, hparams, eval_op, accuracy, data_loader, mode, summary_eval_writer=None):
+def eval_child_model(num_gpus, session, hparams, eval_op, accuracy, data_loader, mode, summary_eval_writer=None):
   if mode == 'val':
     images = data_loader.val_images
     labels = data_loader.val_labels
@@ -71,10 +71,10 @@ def eval_child_model(session, hparams, eval_op, accuracy, data_loader, mode, sum
   assert len(images) == len(labels)
 
   # assert len(images) % model.batch_size == 0
-  eval_batches = int(len(images) / hparams.batch_size)
+  eval_batches = int(len(images) / (hparams.batch_size*num_gpus))
   for i in range(eval_batches):
-    eval_images = images[i * hparams.batch_size:(i + 1) * hparams.batch_size]
-    eval_labels = labels[i * hparams.batch_size:(i + 1) * hparams.batch_size]
+    eval_images = images[i * hparams.batch_size*num_gpus:(i + 1) * hparams.batch_size*num_gpus]
+    eval_labels = labels[i * hparams.batch_size*num_gpus:(i + 1) * hparams.batch_size*num_gpus]
     _ = session.run(eval_op,
         feed_dict={
             images: eval_images,

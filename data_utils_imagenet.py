@@ -9,7 +9,7 @@ import augmentation_transforms_ImageNet
 import numpy as np
 import policies as found_policies
 import tensorflow as tf
-import dill
+#import dill
 
 try:
   import cPickle

@@ -323,16 +323,40 @@ class DataSetCifar(object):
     assert len(sub_data) == sub_train_dataset_size+hparams.test_size
     return sub_data, sub_labels, sub_train_dataset_size
 
-  def next_batch(self):
+  # def next_batch(self):
+  #   """Return the next minibatch of augmented data."""
+  #   next_train_index = self.curr_train_index + self.hparams.batch_size
+  #   if next_train_index > self.num_train:
+  #     # Increase epoch number
+  #     epoch = self.epochs + 1
+  #     self.reset()
+  #     self.epochs = epoch
+  #   batched_data = (self.train_images[self.curr_train_index: self.curr_train_index + self.hparams.batch_size],
+  #                   self.train_labels[self.curr_train_index: self.curr_train_index + self.hparams.batch_size])
+  #   final_imgs = []
+  #
+  #   images, labels = batched_data
+  #   for data in images:
+  #     epoch_policy = self.good_policies[np.random.choice(len(self.good_policies))]
+  #     final_img = augmentation_transforms.apply_policy(epoch_policy, data)
+  #     final_img = augmentation_transforms.random_flip(augmentation_transforms.zero_pad_and_crop(final_img, 4))
+  #     # Apply cutout
+  #     final_img = augmentation_transforms.cutout_numpy(final_img)
+  #     final_imgs.append(final_img)
+  #   batched_data = (np.array(final_imgs, np.float32), labels)
+  #   self.curr_train_index += self.hparams.batch_size
+  #   return batched_data
+
+  def next_batch(self, batch_size_total):
     """Return the next minibatch of augmented data."""
-    next_train_index = self.curr_train_index + self.hparams.batch_size
+    next_train_index = self.curr_train_index + batch_size_total
     if next_train_index > self.num_train:
       # Increase epoch number
       epoch = self.epochs + 1
       self.reset()
       self.epochs = epoch
-    batched_data = (self.train_images[self.curr_train_index: self.curr_train_index + self.hparams.batch_size],
-                    self.train_labels[self.curr_train_index: self.curr_train_index + self.hparams.batch_size])
+    batched_data = (self.train_images[self.curr_train_index: self.curr_train_index + batch_size_total],
+                    self.train_labels[self.curr_train_index: self.curr_train_index + batch_size_total])
     final_imgs = []
 
     images, labels = batched_data
@@ -344,7 +368,7 @@ class DataSetCifar(object):
       final_img = augmentation_transforms.cutout_numpy(final_img)
       final_imgs.append(final_img)
     batched_data = (np.array(final_imgs, np.float32), labels)
-    self.curr_train_index += self.hparams.batch_size
+    self.curr_train_index += batch_size_total
     return batched_data
 
   def next_batch_for_visualization(self):

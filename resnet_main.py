@@ -54,6 +54,7 @@ tf.flags.DEFINE_string('teacher_model_name', '#', 'the name of teacher model')
 # tf.flags.DEFINE_string("job_name", "#", "One of 'ps', 'worker'")
 # tf.flags.DEFINE_integer("task_index", 0, "Index of task within the job")
 tf.flags.DEFINE_integer("num_gpus", 4, "num_gpus")
+num_gpus = 4
 
 FLAGS = tf.flags.FLAGS
 arg_scope = tf.contrib.framework.arg_scope
@@ -533,8 +534,8 @@ class CifarModelTrainer(object):
           num_classes = 1000
         else:
           raise EOFError("NOt found dataset!")
-        images = tf.placeholder(dtype=tf.float32, shape=[hparams.batch_size, image_size, image_size, 3], name="images_placeholder")
-        labels = tf.placeholder(dtype=tf.float32, shape=[hparams.batch_size, num_classes], name="labels_placeholder")
+        images = tf.placeholder(dtype=tf.float32, shape=[None, image_size, image_size, 3], name="images_placeholder")
+        labels = tf.placeholder(dtype=tf.float32, shape=[None, num_classes], name="labels_placeholder")
 
         # Build the graph
         for i in range(FLAGS.num_gpus):
@@ -565,7 +566,8 @@ class CifarModelTrainer(object):
         training_accuracy_list = []
         train_accuracy_list = []
         test_accuracy_list = []
-        steps_per_epoch = int(hparams.train_size / hparams.batch_size)
+        batch_size_total = hparams.batch_size * FLAGS.num_gpus
+        steps_per_epoch = int(hparams.train_size / batch_size_total)
         #steps_per_epoch = 10
         total_steps = hparams.num_epochs * steps_per_epoch
         tf.logging.info('Steps per epoch: {}'.format(steps_per_epoch))
@@ -576,7 +578,7 @@ class CifarModelTrainer(object):
           session.run(init)
           for step in range(1, total_steps + 1):
             # print(step)
-            train_images, train_labels = self.data_loader.next_batch()
+            train_images, train_labels = self.data_loader.next_batch(batch_size_total)
             session.run(train_op,feed_dict={images: train_images,labels: train_labels,})
 
             if step % 100 == 0 or step == 1:

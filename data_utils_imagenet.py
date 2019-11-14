@@ -122,27 +122,28 @@ class DataSetImageNet(object):
       all_data = np.array(all_data)
       return all_data, all_labels
 
-  def next_batch(self):
+  def next_batch(self, num_gpus):
     """Return the next minibatch of augmented data."""
-    next_train_index = self.curr_train_index + self.hparams.batch_size
+    next_train_index = self.curr_train_index + self.hparams.batch_size*num_gpus
     if next_train_index > self.num_train:
       # Increase epoch number
       epoch = self.epochs + 1
       self.reset()
       self.epochs = epoch
-    batched_data = (self.train_images[self.curr_train_index: self.curr_train_index + self.hparams.batch_size],
-                    self.train_labels[self.curr_train_index: self.curr_train_index + self.hparams.batch_size])
+    batched_data = (self.train_images[self.curr_train_index: self.curr_train_index + self.hparams.batch_size*num_gpus],
+                    self.train_labels[self.curr_train_index: self.curr_train_index + self.hparams.batch_size*num_gpus])
     final_imgs = []
 
     images, labels = batched_data
     for data in images:
       epoch_policy = self.good_policies[np.random.choice(len(self.good_policies))]
       final_img = augmentation_transforms_ImageNet.apply_policy(epoch_policy, data)
-      final_img = augmentation_transforms_ImageNet.random_flip(augmentation_transforms_ImageNet.zero_pad_and_crop(final_img, 32))
-      final_img = augmentation_transforms_ImageNet.cutout_numpy(final_img, size=128)
+      final_img = augmentation_transforms_ImageNet.random_flip(augmentation_transforms_ImageNet.zero_pad_and_crop(final_img, 4))
+      # Apply cutout
+      final_img = augmentation_transforms_ImageNet.cutout_numpy(final_img)
       final_imgs.append(final_img)
     batched_data = (np.array(final_imgs, np.float32), labels)
-    self.curr_train_index += self.hparams.batch_size
+    self.curr_train_index += self.hparams.batch_size*num_gpus
     return batched_data
 
   def reset(self):

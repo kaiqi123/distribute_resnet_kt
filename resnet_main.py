@@ -570,8 +570,9 @@ class CifarModelTrainer(object):
             train_images, train_labels = self.data_loader.next_batch()
             session.run(train_op,feed_dict={images: train_images,labels: train_labels,})
 
-            # if step % 1 == 0 or step == 1:
-            #   accuracy = session.run(m.accuracy, feed_dict={images: train_images, labels: train_labels})
+            if step % 100 == 0 or step == 1:
+              print(step)
+              # accuracy = session.run(m.accuracy, feed_dict={images: train_images, labels: train_labels})
 
             # if curr_step!=0 and (curr_step % steps_per_epoch == 0 or curr_step == total_steps-1):
             #   curr_epoch = int(curr_step / steps_per_epoch)

@@ -566,7 +566,7 @@ class CifarModelTrainer(object):
         with tf.Session() as session:
           session.run(init)
           for step in range(1, total_steps + 1):
-            print(step)
+            # print(step)
             train_images, train_labels = self.data_loader.next_batch()
             session.run(train_op,feed_dict={images: train_images,labels: train_labels,})
 

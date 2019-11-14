@@ -70,7 +70,7 @@ class DataSetImageNet(object):
       test_labels = []
       test_data = []
       for i in range(len(test_labels_raw)):
-        if 0<=test_labels_raw[i]<len(true_labels):
+        if 0<=int(test_labels_raw[i])<len(true_labels):
           test_labels.append(test_labels_raw[i])
           test_data.append(test_data_raw[i])
 

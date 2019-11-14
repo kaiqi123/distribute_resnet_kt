@@ -145,7 +145,7 @@ class DataSetImageNet(object):
           labels = d['labels']
           all_data = all_data + list(data)
           all_labels = all_labels + labels
-      # all_data = np.array(all_data)
+      all_data = np.array(all_data)
       return all_data, all_labels
 
   def next_batch(self, num_gpus):

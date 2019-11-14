@@ -39,50 +39,50 @@ class DataSetImageNet(object):
     self.good_policies = found_policies.good_policies()
 
     if hparams.dataset == "imagenet_256":
-      # IMAGE_SIZE = 256
-      # datafiles = ['train_1.pkl','train_2.pkl']
-      # all_data, all_labels = self.read_pklData(hparams.data_path, datafiles)
-      # num_classes = 11
-      # train_dataset_size = 11300
-      # self.crop_amount = 32
-      # self.cutout_size = 128
-
-      IMAGE_SIZE=256
-      train_datafiles1 = []
-      for i in range(1, 2):
-        train_datafiles1.append("train_"+str(i)+".pkl")
-      train_data1, train_labels1 = self.read_pklData(hparams.data_path, train_datafiles1)
-
-      train_datafiles2 = []
-      for i in range(2, 4):
-        train_datafiles2.append("train_"+str(i)+".pkl")
-      train_data2, train_labels2 = self.read_pklData(hparams.data_path, train_datafiles2)
-      train_labels = train_labels1+train_labels2
-
-      true_labels=[]
-      for e in train_labels:
-        if e not in true_labels:
-          true_labels.append(e)
-      print("num class: {}".format(len(true_labels)))
-
-      test_datafiles = ['test_1.pkl', 'test_2.pkl', 'test_3.pkl', 'test_4.pkl', 'test_5.pkl']
-      test_data_raw, test_labels_raw = self.read_pklData(hparams.data_path, test_datafiles)
-      test_labels = []
-      test_data = []
-      for i in range(len(test_labels_raw)):
-        if 0<=int(test_labels_raw[i])<len(true_labels):
-          test_labels.append(test_labels_raw[i])
-          test_data.append(test_data_raw[i])
-
-      all_data = train_data1+train_data2+test_data
-      all_labels = train_labels1+train_labels2+test_labels
-      all_data = np.array(all_data)
-      num_classes = len(true_labels)
-      train_dataset_size = len(train_labels)
+      IMAGE_SIZE = 256
+      datafiles = ['train_1.pkl', 'train_2.pkl', 'train_3.pkl', 'train_4.pkl', 'train_5.pkl', 'test.pkl']
+      all_data, all_labels = self.read_pklData(hparams.data_path, datafiles)
+      num_classes = 11
+      train_dataset_size = 11300
       self.crop_amount = 32
       self.cutout_size = 128
-      print("train_dataset_size: {}".format(train_dataset_size))
-      print("test_dataset_size: {}".format(len(test_labels)))
+
+      # IMAGE_SIZE=256
+      # train_datafiles1 = []
+      # for i in range(1, 2):
+      #   train_datafiles1.append("train_"+str(i)+".pkl")
+      # train_data1, train_labels1 = self.read_pklData(hparams.data_path, train_datafiles1)
+      #
+      # train_datafiles2 = []
+      # for i in range(2, 4):
+      #   train_datafiles2.append("train_"+str(i)+".pkl")
+      # train_data2, train_labels2 = self.read_pklData(hparams.data_path, train_datafiles2)
+      # train_labels = train_labels1+train_labels2
+      #
+      # true_labels=[]
+      # for e in train_labels:
+      #   if e not in true_labels:
+      #     true_labels.append(e)
+      # print("num class: {}".format(len(true_labels)))
+      #
+      # test_datafiles = ['test_1.pkl', 'test_2.pkl', 'test_3.pkl', 'test_4.pkl', 'test_5.pkl']
+      # test_data_raw, test_labels_raw = self.read_pklData(hparams.data_path, test_datafiles)
+      # test_labels = []
+      # test_data = []
+      # for i in range(len(test_labels_raw)):
+      #   if 0<=int(test_labels_raw[i])<len(true_labels):
+      #     test_labels.append(test_labels_raw[i])
+      #     test_data.append(test_data_raw[i])
+      #
+      # all_data = train_data1+train_data2+test_data
+      # all_labels = train_labels1+train_labels2+test_labels
+      # all_data = np.array(all_data)
+      # num_classes = 31
+      # train_dataset_size = len(train_labels)
+      # self.crop_amount = 32
+      # self.cutout_size = 128
+      # print("train_dataset_size: {}".format(train_dataset_size))
+      # print("test_dataset_size: {}".format(len(test_labels)))
     elif hparams.dataset == "imagenet_32":
       IMAGE_SIZE = 32
       datafiles = ['train_1.pkl', 'train_2.pkl', 'train_3.pkl', 'train_4.pkl', 'train_5.pkl', 'test.pkl']

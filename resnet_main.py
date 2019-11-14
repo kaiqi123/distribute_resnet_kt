@@ -473,13 +473,6 @@ class CifarModelTrainer(object):
         meval.build('eval')
       return m, meval
 
-  def _build_models_eval(self):
-    if FLAGS.model_type == "independent_student":
-      with tf.variable_scope('model', reuse=True, use_resource=False):
-        meval = CifarModel(self.hparams, 'independent_student')
-        meval.build('eval')
-      return meval
-
   def average_gradients(self, tower_grads):
     average_grads = []
     for grad_and_vars in zip(*tower_grads):
@@ -506,9 +499,11 @@ class CifarModelTrainer(object):
     return average_grads
 
   def run_model(self):
+
     PS_OPS = ['Variable', 'VariableV2', 'AutoReloadVariable']
     def assign_to_device(device, ps_device='/cpu:0'):
       def _assign(op):
+        print(op)
         node_def = op if isinstance(op, tf.NodeDef) else op.node_def
         if node_def.op in PS_OPS:
           return "/" + ps_device

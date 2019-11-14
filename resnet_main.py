@@ -317,15 +317,15 @@ class CifarModel(object):
       #   train_op = tf.group(*train_ops)
       # return train_op
 
-    is_training = 'train' in mode
-    if is_training:
-      self.global_step = tf.train.get_or_create_global_step()
+    # is_training = 'train' in mode
+    # if is_training:
+    #   self.global_step = tf.train.get_or_create_global_step()
 
     logits, self.output_dict = build_model(images, self.num_classes, is_training, self.hparams, self.type)
     self.predictions, self.cost = helper_utils.setup_loss(logits, labels)
     self.accuracy, self.eval_op = tf.metrics.accuracy(tf.argmax(labels, 1), tf.argmax(self.predictions, 1))
 
-    # self._calc_num_trainable_params()
+    self._calc_num_trainable_params()
     self.cost = helper_utils.decay_weights(self.cost, self.hparams.weight_decay_rate)
 
     if is_training:
@@ -429,7 +429,7 @@ class CifarModelTrainer(object):
     tf.logging.info('Finish to evaluate {} model.................................................'.format(meval.type))
     return test_accuracy, train_accuracy
 
-  def _build_models(self, images, labels, reuse_vars):
+  def _build_models(self, hparams, images, num_classes, reuse_vars):
     """Builds the image models for train and eval."""
     if FLAGS.model_type=="dependent_student":
       tf.logging.info("build dependent student###############################")
@@ -449,14 +449,18 @@ class CifarModelTrainer(object):
     elif FLAGS.model_type == "independent_student":
       tf.logging.info("build independent student###########################")
       with tf.variable_scope('model', reuse=reuse_vars, use_resource=False):
-        m = CifarModel(self.hparams, 'independent_student')
-        m.build('train', images, labels)
+
+        train_logits, output_dict = build_model(images, num_classes, True, hparams, FLAGS.model_type)
+        # m = CifarModel(self.hparams, 'independent_student')
+        # m.build('train', images, labels)
         # self._num_trainable_params = m.num_trainable_params
         # self._saver = m.saver
       with tf.variable_scope('model', reuse=True, use_resource=False):
-        meval = CifarModel(self.hparams, 'independent_student')
-        meval.build('eval', images, labels)
-      return m, meval
+        test_logits, output_dict = build_model(images, num_classes, False, hparams, FLAGS.model_type)
+
+        # meval = CifarModel(self.hparams, 'independent_student')
+        # meval.build('eval', images, labels)
+      return train_logits, test_logits
 
     elif FLAGS.model_type == "teacher":
       tf.logging.info("build teacher###########################")
@@ -540,12 +544,17 @@ class CifarModelTrainer(object):
               sub_images = images[i * hparams.batch_size: (i+1) * hparams.batch_size]
               sub_labels = labels[i * hparams.batch_size: (i+1) * hparams.batch_size]
 
-
-              m,meval = self._build_models(sub_images,sub_labels,reuse_vars)
-              optimizer = m.optimizer
+              train_logits, test_logits = self._build_models(hparams, sub_images, num_classes, reuse_vars)
+              predictions, cost = helper_utils.setup_loss(train_logits, sub_labels)
+              cost = helper_utils.decay_weights(cost, hparams.weight_decay_rate)
+              # lr_rate_ph = tf.Variable(0.0, name='lrn_rate', trainable=False)
+              optimizer = tf.train.MomentumOptimizer(0.1, 0.9, use_nesterov=True)
+              grads_tvars = optimizer.compute_gradients(cost)
+              if i == 0:
+                accuracy, eval_op = tf.metrics.accuracy(tf.argmax(sub_labels, 1), tf.argmax(predictions, 1))
 
               reuse_vars = True
-              tower_grads.append(m.grads_tvars)
+              tower_grads.append(grads_tvars)
 
         tower_grads = self.average_gradients(tower_grads)
         apply_op = optimizer.apply_gradients(tower_grads)

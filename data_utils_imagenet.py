@@ -40,12 +40,22 @@ class DataSetImageNet(object):
 
     if hparams.dataset == "imagenet_256":
       IMAGE_SIZE=256
-      datafiles = []
-      for i in range(1, 101):
-        datafiles.append("train_"+str(i)+".pkl")
+      train_datafiles1 = []
+      for i in range(1, 51):
+        train_datafiles1.append("train_"+str(i)+".pkl")
+      train_data1, train_labels1 = self.read_pklData(hparams.data_path, train_datafiles1)
+
+      train_datafiles2 = []
+      for i in range(51, 101):
+        train_datafiles1.append("train_"+str(i)+".pkl")
+      train_data2, train_labels2 = self.read_pklData(hparams.data_path, train_datafiles2)
+
       test_datafiles = ['test_1.pkl', 'test_2.pkl', 'test_3.pkl', 'test_4.pkl', 'test_5.pkl']
-      datafiles = datafiles+test_datafiles
-      all_data, all_labels = self.read_pklData(hparams.data_path, datafiles)
+      test_data, test_labels = self.read_pklData(hparams.data_path, test_datafiles)
+
+      all_data = train_data1+train_data2+test_data
+      all_data = np.array(all_data)
+      all_labels = train_labels1+train_labels2+test_labels
       num_classes = 1000
       train_dataset_size = len(all_labels) - 50000
       print("train_dataset_size: {}".format(train_dataset_size))
@@ -109,7 +119,7 @@ class DataSetImageNet(object):
           labels = d['labels']
           all_data = all_data + list(data)
           all_labels = all_labels + labels
-      all_data = np.array(all_data)
+      #all_data = np.array(all_data)
       return all_data, all_labels
 
   def next_batch(self):

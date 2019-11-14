@@ -554,17 +554,14 @@ class CifarModelTrainer(object):
             tower_grads.append(grads_tvars)
 
       tower_grads = self.average_gradients(tower_grads)
-      # train_op = optimizer.apply_gradients(tower_grads)
       apply_op = optimizer.apply_gradients(tower_grads)
       train_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
       with tf.control_dependencies([apply_op]):
         train_op = tf.group(*train_ops)
 
       training_accuracy_list = []
-      train_accuracy_list = []
       test_accuracy_list = []
-      batch_size_total = hparams.batch_size * FLAGS.num_gpus
-      steps_per_epoch = int(hparams.train_size / batch_size_total)
+      steps_per_epoch = int(hparams.train_size / (hparams.batch_size * FLAGS.num_gpus))
       steps_per_epoch = 10
       total_steps = hparams.num_epochs * steps_per_epoch
       tf.logging.info('Steps per epoch: {}'.format(steps_per_epoch))
@@ -575,6 +572,9 @@ class CifarModelTrainer(object):
         session.run(init)
         for curr_step in range(1, total_steps + 1):
           start_epoch_time = time.time()
+
+          curr_lr = helper_utils.get_lr(hparams=hparams, t_cur=curr_step)
+          lr_rate_ph.load(curr_lr, session=session)
 
           train_images, train_labels = self.data_loader.next_batch(FLAGS.num_gpus)
           ts = time.time()
@@ -596,10 +596,11 @@ class CifarModelTrainer(object):
               labels: self.data_loader.test_labels[i:i + hparams.batch_size]})
                                      for i in range(0, len(self.data_loader.test_labels), hparams.batch_size)])
             test_accuracy_list.append(test_accuracy_per_epoch)
+            training_accuracy_list.append(acc)
             print("Testing Accuracy: {}".format(test_accuracy_per_epoch))
+            print("Training Accuracy List: {}".format(training_accuracy_list))
             print("Testing Accuracy List: {}".format(test_accuracy_list))
-
-            tf.logging.info('Epoch time(min): {}\n'.format((time.time() - start_epoch_time) / 60.0))
+            print('Epoch time(min): {}\n'.format((time.time() - start_epoch_time) / 60.0))
             start_epoch_time = time.time()
 
     end_time = time.time()

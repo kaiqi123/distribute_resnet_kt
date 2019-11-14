@@ -357,8 +357,6 @@ class CifarModelTrainer(object):
     np.random.seed(0)
     if hparams.dataset == 'cifar10' or hparams.dataset == 'cifar100':
         self.data_loader = data_utils_cifar.DataSetCifar(hparams)
-    elif hparams.dataset == 'caltech101':
-        self.data_loader = data_utils_caltech101.DataSetCaltech101(hparams)
     else:
       raise ValueError("Not found dataSet name")
     np.random.seed()
@@ -578,8 +576,8 @@ class CifarModelTrainer(object):
           session.run(init)
           for step in range(1, total_steps + 1):
             # print(step)
-            train_images, train_labels = self.data_loader.next_batch(batch_size_total)
-            session.run(train_op,feed_dict={images: train_images,labels: train_labels,})
+            train_images, train_labels = self.data_loader.next_batch(FLAGS.num_gpus)
+            session.run(train_op,feed_dict={images: train_images,labels: train_labels})
 
             if step % 100 == 0 or step == 1:
               print(step)

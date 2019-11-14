@@ -347,16 +347,16 @@ class DataSetCifar(object):
   #   self.curr_train_index += self.hparams.batch_size
   #   return batched_data
 
-  def next_batch(self, batch_size_total):
+  def next_batch(self, num_gpus):
     """Return the next minibatch of augmented data."""
-    next_train_index = self.curr_train_index + batch_size_total
+    next_train_index = self.curr_train_index + self.hparams.batch_size*num_gpus
     if next_train_index > self.num_train:
       # Increase epoch number
       epoch = self.epochs + 1
       self.reset()
       self.epochs = epoch
-    batched_data = (self.train_images[self.curr_train_index: self.curr_train_index + batch_size_total],
-                    self.train_labels[self.curr_train_index: self.curr_train_index + batch_size_total])
+    batched_data = (self.train_images[self.curr_train_index: self.curr_train_index + self.hparams.batch_size*num_gpus],
+                    self.train_labels[self.curr_train_index: self.curr_train_index + self.hparams.batch_size*num_gpus])
     final_imgs = []
 
     images, labels = batched_data
@@ -368,33 +368,9 @@ class DataSetCifar(object):
       final_img = augmentation_transforms.cutout_numpy(final_img)
       final_imgs.append(final_img)
     batched_data = (np.array(final_imgs, np.float32), labels)
-    self.curr_train_index += batch_size_total
+    self.curr_train_index += self.hparams.batch_size*num_gpus
     return batched_data
 
-  def next_batch_for_visualization(self):
-    """next_batch_for_visualization, Return the next minibatch of augmented data."""
-    next_train_index = self.curr_train_index + self.hparams.batch_size
-    if next_train_index > self.num_train:
-      # Increase epoch number
-      epoch = self.epochs + 1
-      self.reset()
-      self.epochs = epoch
-    batched_data = (self.train_images[self.curr_train_index: self.curr_train_index + self.hparams.batch_size],
-                    self.train_labels[self.curr_train_index: self.curr_train_index + self.hparams.batch_size])
-    final_imgs = []
-
-    images, labels = batched_data
-    for data in images:
-      epoch_policy = self.good_policies[np.random.choice(len(self.good_policies))]
-      final_img = augmentation_transforms.apply_policy(epoch_policy, data)
-      final_img = augmentation_transforms.random_flip(augmentation_transforms.zero_pad_and_crop(final_img, 4))
-      # Apply cutout
-      final_img = augmentation_transforms.cutout_numpy(final_img)
-      final_imgs.append(final_img)
-    # this line different, return origin images
-    batched_data = (np.array(final_imgs, np.float32), labels, np.array(images, np.float32))
-    self.curr_train_index += self.hparams.batch_size
-    return batched_data
 
   def reset(self):
     """Reset training data and index into the training data."""

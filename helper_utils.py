@@ -125,7 +125,7 @@ def get_lr(hparams, t_cur=None):
   return lr
 
 def run_iteration_training(session, model, data_loader, curr_step, total_steps):
-    train_images, train_labels = data_loader.next_batch()
+    # train_images, train_labels = data_loader.next_batch()
     curr_lr = get_lr(hparams=model.hparams, t_cur=curr_step)
     model.lr_rate_ph.load(curr_lr, session=session)
 

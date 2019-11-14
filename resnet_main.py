@@ -49,10 +49,11 @@ tf.flags.DEFINE_string('test_data_type', '#', 'test_data_type')
 tf.flags.DEFINE_string('teacher_model_name', '#', 'the name of teacher model')
 
 # For distributed
-tf.flags.DEFINE_string("ps_hosts", "#", "Comma-separated list of hostname:port pairs")
-tf.flags.DEFINE_string("worker_hosts", "#", "Comma-separated list of hostname:port pairs")
-tf.flags.DEFINE_string("job_name", "#", "One of 'ps', 'worker'")
-tf.flags.DEFINE_integer("task_index", 0, "Index of task within the job")
+# tf.flags.DEFINE_string("ps_hosts", "#", "Comma-separated list of hostname:port pairs")
+# tf.flags.DEFINE_string("worker_hosts", "#", "Comma-separated list of hostname:port pairs")
+# tf.flags.DEFINE_string("job_name", "#", "One of 'ps', 'worker'")
+# tf.flags.DEFINE_integer("task_index", 0, "Index of task within the job")
+tf.flags.DEFINE_integer("num_gpus", 4, "num_gpus")
 
 FLAGS = tf.flags.FLAGS
 arg_scope = tf.contrib.framework.arg_scope
@@ -128,11 +129,10 @@ class CifarModel(object):
     self.hparams = hparams
     self.type = type
 
-  def build(self, mode, teacher_model=None):
+  def build(self, mode, images, labels, teacher_model=None):
     assert mode in ['train', 'eval']
     self.mode = mode
     self._setup_misc(mode)
-    self._setup_images_and_labels()
 
     if self.type in ["teacher", "independent_student"]:
       self._build_graph_independent(self.images, self.labels, mode)
@@ -144,26 +144,26 @@ class CifarModel(object):
       teacher_variables_to_restore = [var for var in tf.trainable_variables() if var.op.name.startswith("model/teacher_architecture")]
       self.teacher_saver = tf.train.Saver(teacher_variables_to_restore)
 
-    self.summary_op = self.summary_ops()
+    # self.summary_op = self.summary_ops()
     self.init = tf.group(tf.global_variables_initializer(), tf.local_variables_initializer())
 
-  def summary_ops(self):
-      if self.type == "independent_student" or self.type == "teacher":
-        tf.summary.scalar(self.type + "/accuracy", self.accuracy)
-        tf.summary.scalar(self.type + "/loss", self.cost)
-      elif self.type == "dependent_student" and self.mode == "train":
-        tf.summary.scalar(self.type + "/accuracy", self.accuracy)
-        tf.summary.scalar(self.type + "/loss_with_correctLabel", self.cost)
-        tf.summary.scalar(self.teacher_model.type + "/accuracy", self.teacher_model.accuracy)
-      summary_op = tf.summary.merge_all()
-      return summary_op
+  # def summary_ops(self):
+  #     if self.type == "independent_student" or self.type == "teacher":
+  #       tf.summary.scalar(self.type + "/accuracy", self.accuracy)
+  #       tf.summary.scalar(self.type + "/loss", self.cost)
+  #     elif self.type == "dependent_student" and self.mode == "train":
+  #       tf.summary.scalar(self.type + "/accuracy", self.accuracy)
+  #       tf.summary.scalar(self.type + "/loss_with_correctLabel", self.cost)
+  #       tf.summary.scalar(self.teacher_model.type + "/accuracy", self.teacher_model.accuracy)
+  #     summary_op = tf.summary.merge_all()
+  #     return summary_op
 
   def _setup_misc(self, mode):
     self.lr_rate_ph = tf.Variable(0.0, name='lrn_rate', trainable=False)
     self.reuse = None if (mode == 'train') else True
     self.batch_size = self.hparams.batch_size
 
-  def _setup_images_and_labels(self):
+  def _setup_images_and_labels(self, images, labels):
     if FLAGS.dataset == 'cifar10':
       self.num_classes = 10
       image_size = 32
@@ -175,8 +175,10 @@ class CifarModel(object):
       image_size = 32
     else:
       raise ValueError("Not found dataSet name")
-    self.images = tf.placeholder(dtype=tf.float32, shape=[self.batch_size, image_size, image_size, 3], name="images_placeholder")
-    self.labels = tf.placeholder(dtype=tf.float32, shape=[self.batch_size, self.num_classes], name="labels_placeholder")
+    self.images = images
+    self.labels = labels
+    # self.images = tf.placeholder(dtype=tf.float32, shape=[self.batch_size, image_size, image_size, 3], name="images_placeholder")
+    # self.labels = tf.placeholder(dtype=tf.float32, shape=[self.batch_size, self.num_classes], name="labels_placeholder")
 
   def assign_epoch(self, session, epoch_value):
     session.run(self._epoch_update, feed_dict={self._new_epoch: epoch_value})
@@ -300,43 +302,45 @@ class CifarModel(object):
   def _build_graph_independent(self, images, labels, mode):
 
     def _build_train_op(hparams, initial_lr, cost, global_step):
-      tvars = tf.trainable_variables()
-      grads = tf.gradients(cost, tvars)
-      if hparams.gradient_clipping_by_global_norm > 0.0:
-        grads, norm = tf.clip_by_global_norm(grads, hparams.gradient_clipping_by_global_norm)
+      # tvars = tf.trainable_variables()
+      # grads = tf.gradients(cost, tvars)
+      # if hparams.gradient_clipping_by_global_norm > 0.0:
+      #   grads, norm = tf.clip_by_global_norm(grads, hparams.gradient_clipping_by_global_norm)
       optimizer = tf.train.MomentumOptimizer(initial_lr, 0.9, use_nesterov=True)
-      apply_op = optimizer.apply_gradients(zip(grads, tvars), global_step=global_step, name='train_step')
-      train_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
-      with tf.control_dependencies([apply_op]):
-        train_op = tf.group(*train_ops)
-      return train_op
+      grads_tvars = optimizer.compute_gradients(cost)
+      return optimizer, grads_tvars
+
+      # apply_op = optimizer.apply_gradients(zip(grads, tvars), global_step=global_step, name='train_step')
+      # train_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
+      # with tf.control_dependencies([apply_op]):
+      #   train_op = tf.group(*train_ops)
+      # return train_op
 
     is_training = 'train' in mode
-    if is_training:
-      self.global_step = tf.train.get_or_create_global_step()
+    # if is_training:
+      # self.global_step = tf.train.get_or_create_global_step()
 
     logits, self.output_dict = build_model(images, self.num_classes, is_training, self.hparams, self.type)
     self.predictions, self.cost = helper_utils.setup_loss(logits, labels)
     self.accuracy, self.eval_op = tf.metrics.accuracy(tf.argmax(labels, 1), tf.argmax(self.predictions, 1))
 
-    self._calc_num_trainable_params()
+    # self._calc_num_trainable_params()
     self.cost = helper_utils.decay_weights(self.cost, self.hparams.weight_decay_rate)
 
     if is_training:
-      self.train_op = _build_train_op(self.hparams, self.lr_rate_ph, self.cost, self.global_step)
+      self.optimizer, self.grads_tvars = _build_train_op(self.hparams, self.lr_rate_ph, self.cost, self.global_step)
 
     #with tf.device('/cpu:0'):
     #self.saver = tf.train.Saver(max_to_keep=2)
-    self.saver = tf.train.Saver()
+    # self.saver = tf.train.Saver()
 
-    for var in tf.trainable_variables():
-      tf.logging.info(var)
-    tf.logging.info('num of trainable variables: {}'.format(len(tf.trainable_variables())))
-
-    # see the output of every layer, for analyze pruning
-    for key, value in sorted(self.output_dict.items()):
-      print(key, value)
-    self.output_list = helper_output_analyze.return_output_list(self.output_dict)
+    # for var in tf.trainable_variables():
+    #   tf.logging.info(var)
+    # tf.logging.info('num of trainable variables: {}'.format(len(tf.trainable_variables())))
+    # # see the output of every layer, for analyze pruning
+    # for key, value in sorted(self.output_dict.items()):
+    #   print(key, value)
+    # self.output_list = helper_output_analyze.return_output_list(self.output_dict)
 
 class CifarModelTrainer(object):
   """Trains an instance of the CifarModel class."""
@@ -424,7 +428,7 @@ class CifarModelTrainer(object):
     tf.logging.info('Finish to evaluate {} model.................................................'.format(meval.type))
     return test_accuracy, train_accuracy
 
-  def _build_models(self):
+  def _build_models(self, images, labels, reuse_vars):
     """Builds the image models for train and eval."""
     if FLAGS.model_type=="dependent_student":
       tf.logging.info("build dependent student###############################")
@@ -443,15 +447,15 @@ class CifarModelTrainer(object):
 
     elif FLAGS.model_type == "independent_student":
       tf.logging.info("build independent student###########################")
-      with tf.variable_scope('model', use_resource=False):
+      with tf.variable_scope('model', reuse=reuse_vars, use_resource=False):
         m = CifarModel(self.hparams, 'independent_student')
-        m.build('train')
+        m.build('train', images, labels)
         self._num_trainable_params = m.num_trainable_params
         self._saver = m.saver
-      # with tf.variable_scope('model', reuse=True, use_resource=False):
-      #   meval = CifarModel(self.hparams, 'independent_student')
-      #   meval.build('eval')
-      return m
+      with tf.variable_scope('model', reuse=True, use_resource=False):
+        meval = CifarModel(self.hparams, 'independent_student')
+        meval.build('eval', images, labels)
+      return m, meval
 
     elif FLAGS.model_type == "teacher":
       tf.logging.info("build teacher###########################")
@@ -465,7 +469,6 @@ class CifarModelTrainer(object):
         meval.build('eval')
       return m, meval
 
-
   def _build_models_eval(self):
     if FLAGS.model_type == "independent_student":
       with tf.variable_scope('model', reuse=True, use_resource=False):
@@ -473,66 +476,113 @@ class CifarModelTrainer(object):
         meval.build('eval')
       return meval
 
+  def average_gradients(self, tower_grads):
+    average_grads = []
+    for grad_and_vars in zip(*tower_grads):
+      # Note that each grad_and_vars looks like the following:
+      #   ((grad0_gpu0, var0_gpu0), ... , (grad0_gpuN, var0_gpuN))
+      grads = []
+      for g, _ in grad_and_vars:
+        # Add 0 dimension to the gradients to represent the tower.
+        expanded_g = tf.expand_dims(g, 0)
+
+        # Append on a 'tower' dimension which we will average over below.
+        grads.append(expanded_g)
+
+      # Average over the 'tower' dimension.
+      grad = tf.concat(grads, 0)
+      grad = tf.reduce_mean(grad, 0)
+
+      # Keep in mind that the Variables are redundant because they are shared
+      # across towers. So .. we will just return the first tower's pointer to
+      # the Variable.
+      v = grad_and_vars[0][1]
+      grad_and_var = (grad, v)
+      average_grads.append(grad_and_var)
+    return average_grads
+
   def run_model(self):
+    PS_OPS = ['Variable', 'VariableV2', 'AutoReloadVariable']
+    def assign_to_device(device, ps_device='/cpu:0'):
+      def _assign(op):
+        node_def = op if isinstance(op, tf.NodeDef) else op.node_def
+        if node_def.op in PS_OPS:
+          return "/" + ps_device
+        else:
+          return device
+      return _assign
+
     hparams = self.hparams
+    start_time = time.time()
 
-    # for distribute
-    ps_hosts = FLAGS.ps_hosts.split(",")
-    worker_hosts = FLAGS.worker_hosts.split(",")
-    cluster = tf.train.ClusterSpec({"ps": ps_hosts, "worker": worker_hosts})
-    server = tf.train.Server(cluster, job_name=FLAGS.job_name, task_index=FLAGS.task_index)
+    with tf.Graph().as_default():
+      with tf.device('/cpu:0'):
+        tower_grads = []
+        reuse_vars = False
 
-    if FLAGS.job_name == "ps":
-      server.join()
-    elif FLAGS.job_name == "worker":
-      start_time = time.time()
+        if FLAGS.dataset == 'ciafr10':
+          image_size=32
+          num_classes=10
+        elif FLAGS.dataset == 'imagenet':
+          image_size = 256
+          num_classes = 1000
+        else:
+          raise EOFError("NOt found dataset!")
+        images = tf.placeholder(dtype=tf.float32, shape=[hparams.batch_size, image_size, image_size, 3], name="images_placeholder")
+        labels = tf.placeholder(dtype=tf.float32, shape=[hparams.batch_size, num_classes], name="labels_placeholder")
 
-      # Build the graph
-      with tf.Graph().as_default():
+        # Build the graph
+        for i in range(FLAGS.num_gpus):
+          with tf.device(assign_to_device('/gpu:{}'.format(i), ps_device='/cpu:0')):
 
-        with tf.device(tf.train.replica_device_setter(worker_device="/job:worker/task:%d" % FLAGS.task_index,cluster=cluster)):
-          m = self._build_models()
-          #meval = self._build_models_eval()
+              # Split data between GPUs
+              sub_images = images[i * hparams.batch_size: (i+1) * hparams.batch_size]
+              sub_labels = labels[i * hparams.batch_size: (i+1) * hparams.batch_size]
 
-        sv = tf.train.Supervisor(is_chief=(FLAGS.task_index == 0),
-                                 logdir=FLAGS.checkpoint_dir,
-                                 init_op=m.init,
-                                 summary_op=None,
-                                 saver=m.saver,
-                                 global_step=m.global_step,
-                                 save_model_secs=400)
+              m,meval = self._build_models(sub_images,sub_labels,reuse_vars)
+              optimizer = m.optimizer
 
+              reuse_vars = True
+              tower_grads.append(m.grads_tvars)
+
+        tower_grads = self.average_gradients(tower_grads)
+        apply_op = optimizer.apply_gradients(tower_grads)
+        train_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
+        with tf.control_dependencies([apply_op]):
+          train_op = tf.group(*train_ops)
 
         training_accuracy_list = []
         train_accuracy_list = []
         test_accuracy_list = []
-
-        curr_step = 0
         steps_per_epoch = int(hparams.train_size / hparams.batch_size)
         #steps_per_epoch = 10
         total_steps = hparams.num_epochs * steps_per_epoch
         tf.logging.info('Steps per epoch: {}'.format(steps_per_epoch))
         tf.logging.info("Total_steps {}".format(total_steps))
 
-        with sv.prepare_or_wait_for_session(server.target) as session:
-          start_epoch_time = time.time()
-          while curr_step < total_steps:
-            curr_step = helper_utils.run_iteration_training(session, m, self.data_loader, curr_step, total_steps)
+        with tf.Session() as session:
 
-            if curr_step!=0 and (curr_step % steps_per_epoch == 0 or curr_step == total_steps-1):
-              curr_epoch = int(curr_step / steps_per_epoch)
-              tf.logging.info("curr_step: {}, curr_epoch: {}".format(curr_step, curr_epoch))
-              training_accuracy_list = helper_utils.show_accuracy_list(session, curr_epoch, m, self.data_loader, training_accuracy_list, train_accuracy_list, test_accuracy_list)
-              if FLAGS.task_index == 0:
-                tf.logging.info('Training Acc List: {}'.format(training_accuracy_list))
+          for step in range(1, total_steps + 1):
+            print(step)
+            train_images, train_labels = self.data_loader.next_batch()
+            session.run(train_op,feed_dict={images: train_images,labels: train_labels,})
 
-              tf.logging.info('Epoch time(min): {}\n'.format((time.time() - start_epoch_time) / 60.0))
-              start_epoch_time = time.time()
-        sv.stop()
+            # if step % 1 == 0 or step == 1:
+            #   accuracy = session.run(m.accuracy, feed_dict={images: train_images, labels: train_labels})
 
-      end_time = time.time()
-      runtime = round((end_time - start_time) / (60 * 60), 2)
-      tf.logging.info("run time is: " + str(runtime) + " hour")
+            # if curr_step!=0 and (curr_step % steps_per_epoch == 0 or curr_step == total_steps-1):
+            #   curr_epoch = int(curr_step / steps_per_epoch)
+            #   tf.logging.info("curr_step: {}, curr_epoch: {}".format(curr_step, curr_epoch))
+            #   training_accuracy_list = helper_utils.show_accuracy_list(session, curr_epoch, m, self.data_loader, training_accuracy_list, train_accuracy_list, test_accuracy_list)
+            #   if FLAGS.task_index == 0:
+            #     tf.logging.info('Training Acc List: {}'.format(training_accuracy_list))
+            #
+            #   tf.logging.info('Epoch time(min): {}\n'.format((time.time() - start_epoch_time) / 60.0))
+            #   start_epoch_time = time.time()
+
+    end_time = time.time()
+    runtime = round((end_time - start_time) / (60 * 60), 2)
+    tf.logging.info("run time is: " + str(runtime) + " hour")
 
   @property
   def saver(self):

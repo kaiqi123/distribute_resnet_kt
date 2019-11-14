@@ -540,22 +540,24 @@ class CifarModelTrainer(object):
               sub_labels = labels[i * hparams.batch_size: (i+1) * hparams.batch_size]
 
               train_logits, test_logits = self._build_models(hparams, sub_images, num_classes, reuse_vars)
-              predictions, cost = helper_utils.setup_loss(train_logits, sub_labels)
-              cost = helper_utils.decay_weights(cost, hparams.weight_decay_rate)
-              # lr_rate_ph = tf.Variable(0.0, name='lrn_rate', trainable=False)
-              optimizer = tf.train.MomentumOptimizer(0.1, 0.9, use_nesterov=True)
+              # predictions, cost = helper_utils.setup_loss(train_logits, sub_labels)
+              # cost = helper_utils.decay_weights(cost, hparams.weight_decay_rate)
+              cost = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=train_logits, labels=sub_labels))
+              optimizer = tf.train.MomentumOptimizer(learning_rate=0.1, momentum=0.9, use_nesterov=True)
               grads_tvars = optimizer.compute_gradients(cost)
               if i == 0:
-                accuracy, eval_op = tf.metrics.accuracy(tf.argmax(sub_labels, 1), tf.argmax(predictions, 1))
+                # accuracy, eval_op = tf.metrics.accuracy(tf.argmax(sub_labels, 1), tf.argmax(predictions, 1))
+                correct_pred = tf.equal(tf.argmax(test_logits, 1), tf.argmax(sub_labels, 1))
+                accuracy = tf.reduce_mean(tf.cast(correct_pred, tf.float32))
 
               reuse_vars = True
               tower_grads.append(grads_tvars)
 
         tower_grads = self.average_gradients(tower_grads)
-        apply_op = optimizer.apply_gradients(tower_grads)
-        train_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
-        with tf.control_dependencies([apply_op]):
-          train_op = tf.group(*train_ops)
+        train_op = optimizer.apply_gradients(tower_grads)
+        # train_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
+        # with tf.control_dependencies([apply_op]):
+        #   train_op = tf.group(*train_ops)
 
         training_accuracy_list = []
         train_accuracy_list = []
@@ -573,7 +575,11 @@ class CifarModelTrainer(object):
           for step in range(1, total_steps + 1):
             print(step)
             train_images, train_labels = self.data_loader.next_batch(FLAGS.num_gpus)
+
+            ts = time.time()
             session.run(train_op,feed_dict={images: train_images,labels: train_labels})
+            te = time.time() - ts
+            print(te)
 
             if step % 100 == 0 or step == 1:
               print("iteration: {}".format(step))

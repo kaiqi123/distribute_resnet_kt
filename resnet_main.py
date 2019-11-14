@@ -358,7 +358,7 @@ class CifarModelTrainer(object):
     if hparams.dataset == 'cifar10' or hparams.dataset == 'cifar100':
         self.data_loader = data_utils_cifar.DataSetCifar(hparams)
     if hparams.dataset == 'imagenet_256' or hparams.dataset == 'imagenet_32':
-        self.data_loader = data_utils_imagenet.DataSetCifar(hparams)
+        self.data_loader = data_utils_imagenet.DataSetImageNet(hparams)
     else:
       raise ValueError("Not found dataSet name")
     np.random.seed()

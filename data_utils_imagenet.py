@@ -54,18 +54,25 @@ class DataSetImageNet(object):
       train_data1, train_labels1 = self.read_pklData(hparams.data_path, train_datafiles1)
 
       train_datafiles2 = []
-      for i in range(51, 101):
+      for i in range(51, 71):
         train_datafiles2.append("train_"+str(i)+".pkl")
       train_data2, train_labels2 = self.read_pklData(hparams.data_path, train_datafiles2)
+      train_labels = train_labels1+train_labels2
 
       test_datafiles = ['test_1.pkl', 'test_2.pkl', 'test_3.pkl', 'test_4.pkl', 'test_5.pkl']
-      test_data, test_labels = self.read_pklData(hparams.data_path, test_datafiles)
+      test_data_raw, test_labels_raw = self.read_pklData(hparams.data_path, test_datafiles)
+      test_labels = []
+      test_data = []
+      for i in range(len(test_labels_raw)):
+        if test_labels_raw[i] in train_labels:
+          test_labels.append(test_labels_raw[i])
+          test_data.append(test_data_raw[i])
 
       all_data = train_data1+train_data2+test_data
-      all_data = np.array(all_data)
       all_labels = train_labels1+train_labels2+test_labels
-      num_classes = 1000
-      train_dataset_size = len(all_labels) - 50000
+      all_data = np.array(all_data)
+      num_classes = 700
+      train_dataset_size = len(train_labels)
       self.crop_amount = 32
       self.cutout_size = 128
       print("train_dataset_size: {}".format(train_dataset_size))

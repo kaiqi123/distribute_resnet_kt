@@ -524,7 +524,7 @@ class CifarModelTrainer(object):
         num_classes=10
       elif FLAGS.dataset == 'imagenet_256':
         image_size = 256
-        num_classes = 1000
+        num_classes = 700
       elif FLAGS.dataset == 'imagenet_32':
         image_size = 32
         num_classes = 11

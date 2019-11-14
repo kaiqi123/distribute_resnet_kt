@@ -562,7 +562,6 @@ class CifarModelTrainer(object):
       training_accuracy_list = []
       test_accuracy_list = []
       steps_per_epoch = int(hparams.train_size / (hparams.batch_size * FLAGS.num_gpus))
-      steps_per_epoch = 10
       total_steps = hparams.num_epochs * steps_per_epoch
       tf.logging.info('Steps per epoch: {}'.format(steps_per_epoch))
       tf.logging.info("Total_steps {}".format(total_steps))
@@ -585,11 +584,11 @@ class CifarModelTrainer(object):
             loss, acc = session.run([loss_op, accuracy], feed_dict={images: train_images, labels: train_labels})
             print("Step " + str(curr_step) + ": Minibatch Loss= " + \
                   "{:.4f}".format(loss) + ", Training Accuracy= " + \
-                  "{:.3f}".format(acc) + ", %i Examples/sec" % int(len(train_images) / te))
+                  "{:.3f}".format(acc) + ", %i Examples/sec" % int(len(train_images) / te) + "lr: "+ str(curr_lr))
 
-          if curr_step!=0 and (curr_step % steps_per_epoch == 0 or curr_step == total_steps-1):
+          if curr_step % steps_per_epoch == 0 or curr_step == total_steps-1:
             curr_epoch = int(curr_step / steps_per_epoch)
-            tf.logging.info("curr_step: {}, curr_epoch: {}".format(curr_step, curr_epoch))
+            tf.logging.info("curr_step: {}, curr_epoch: {}, lr: {}".format(curr_step, curr_epoch, curr_lr))
 
             test_accuracy_per_epoch = np.mean([session.run(accuracy, feed_dict={
               images: self.data_loader.test_images[i:i + hparams.batch_size],

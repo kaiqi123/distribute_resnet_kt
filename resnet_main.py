@@ -579,7 +579,7 @@ class CifarModelTrainer(object):
 
           train_images, train_labels = self.data_loader.next_batch(FLAGS.num_gpus)
           ts = time.time()
-          _,_ = session.run(train_op,feed_dict={images: train_images,labels: train_labels})
+          session.run(train_op,feed_dict={images: train_images,labels: train_labels})
           te = time.time() - ts
 
           if curr_step % 5 == 0 or curr_step == 1:

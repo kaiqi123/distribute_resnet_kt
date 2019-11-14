@@ -584,15 +584,15 @@ class CifarModelTrainer(object):
             tf.logging.info("curr_step: {}, curr_epoch: {}".format(curr_step, curr_epoch))
 
             training_accuracy_value = session.run(train_accuracy)
-            train_accuracy_value = helper_utils.eval_child_model(FLAGS.num_gpus, session, hparams, test_eval_op, test_accuracy, self.data_loader, 'eval_train')
-            test_accuracy_value = helper_utils.eval_child_model(FLAGS.num_gpus, session, hparams, test_eval_op, test_accuracy, self.data_loader, 'test')
+            # train_accuracy_value = helper_utils.eval_child_model(FLAGS.num_gpus, session, hparams, test_eval_op, test_accuracy, self.data_loader, 'eval_train')
+            # test_accuracy_value = helper_utils.eval_child_model(FLAGS.num_gpus, session, hparams, test_eval_op, test_accuracy, self.data_loader, 'test')
 
             training_accuracy_list.append(training_accuracy_value)
-            train_accuracy_list.append(train_accuracy_value)
-            test_accuracy_list.append(test_accuracy_value)
+            # train_accuracy_list.append(train_accuracy_value)
+            # test_accuracy_list.append(test_accuracy_value)
             print('Training Acc List: {}'.format(training_accuracy_list))
-            print('Eval Train Acc List: {}'.format(train_accuracy_list))
-            print('Test Acc List: {}'.format(test_accuracy_list))
+            # print('Eval Train Acc List: {}'.format(train_accuracy_list))
+            # print('Test Acc List: {}'.format(test_accuracy_list))
             tf.logging.info('Epoch time(min): {}\n'.format((time.time() - start_epoch_time) / 60.0))
             start_epoch_time = time.time()
 

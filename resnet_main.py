@@ -133,9 +133,10 @@ class CifarModel(object):
     assert mode in ['train', 'eval']
     self.mode = mode
     self._setup_misc(mode)
+    self._setup_images_and_labels(images, labels)
 
     if self.type in ["teacher", "independent_student"]:
-      self._build_graph_independent(images, labels, mode)
+      self._build_graph_independent(self.images, self.labels, mode)
 
     if self.type == "dependent_student":
       self.teacher_model = teacher_model

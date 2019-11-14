@@ -502,7 +502,6 @@ class CifarModelTrainer(object):
     PS_OPS = ['Variable', 'VariableV2', 'AutoReloadVariable']
     def assign_to_device(device, ps_device='/cpu:0'):
       def _assign(op):
-        print(op)
         node_def = op if isinstance(op, tf.NodeDef) else op.node_def
         if node_def.op in PS_OPS:
           return "/" + ps_device
@@ -541,12 +540,7 @@ class CifarModelTrainer(object):
             lr_rate_ph = tf.Variable(0.0, name='lrn_rate', trainable=False)
             optimizer = tf.train.MomentumOptimizer(learning_rate=lr_rate_ph, momentum=0.9, use_nesterov=True)
             grads_tvars = optimizer.compute_gradients(loss_op)
-
             if i == 0:
-              # test_predictions, _ = helper_utils.setup_loss(test_logits, sub_labels)
-              # train_accuracy, train_eval_op = tf.metrics.accuracy(tf.argmax(sub_labels, 1), tf.argmax(train_predictions, 1))
-              # test_accuracy, test_eval_op = tf.metrics.accuracy(tf.argmax(sub_labels, 1), tf.argmax(test_predictions, 1))
-
               correct_pred = tf.equal(tf.argmax(test_logits, 1), tf.argmax(sub_labels, 1))
               accuracy = tf.reduce_mean(tf.cast(correct_pred, tf.float32))
 
@@ -580,11 +574,11 @@ class CifarModelTrainer(object):
           session.run(train_op,feed_dict={images: train_images,labels: train_labels})
           te = time.time() - ts
 
-          if curr_step % 2 == 0 or curr_step == 1:
+          if curr_step % 100 == 0 or curr_step == 1:
             loss, acc = session.run([loss_op, accuracy], feed_dict={images: train_images, labels: train_labels})
             print("Step " + str(curr_step) + ": Minibatch Loss= " + \
                   "{:.4f}".format(loss) + ", Training Accuracy= " + \
-                  "{:.3f}".format(acc) + ", %i Examples/sec" % int(len(train_images) / te) + "lr: "+ str(curr_lr))
+                  "{:.3f}".format(acc) + ", %i Examples/sec" % int(len(train_images) / te) + ", lr: "+ str(curr_lr))
 
           if curr_step % steps_per_epoch == 0 or curr_step == total_steps-1:
             curr_epoch = int(curr_step / steps_per_epoch)

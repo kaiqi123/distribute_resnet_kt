@@ -161,7 +161,7 @@ class CifarModel(object):
   def _setup_misc(self, mode):
     self.lr_rate_ph = tf.Variable(0.0, name='lrn_rate', trainable=False)
     self.reuse = None if (mode == 'train') else True
-    self.batch_size = self.hparams.batch_size
+    # self.batch_size = self.hparams.batch_size
 
   def _setup_images_and_labels(self, images, labels):
     if FLAGS.dataset == 'cifar10':
@@ -450,8 +450,8 @@ class CifarModelTrainer(object):
       with tf.variable_scope('model', reuse=reuse_vars, use_resource=False):
         m = CifarModel(self.hparams, 'independent_student')
         m.build('train', images, labels)
-        self._num_trainable_params = m.num_trainable_params
-        self._saver = m.saver
+        # self._num_trainable_params = m.num_trainable_params
+        # self._saver = m.saver
       with tf.variable_scope('model', reuse=True, use_resource=False):
         meval = CifarModel(self.hparams, 'independent_student')
         meval.build('eval', images, labels)
@@ -538,6 +538,7 @@ class CifarModelTrainer(object):
               # Split data between GPUs
               sub_images = images[i * hparams.batch_size: (i+1) * hparams.batch_size]
               sub_labels = labels[i * hparams.batch_size: (i+1) * hparams.batch_size]
+
 
               m,meval = self._build_models(sub_images,sub_labels,reuse_vars)
               optimizer = m.optimizer

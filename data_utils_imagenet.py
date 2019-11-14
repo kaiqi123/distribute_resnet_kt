@@ -58,6 +58,8 @@ class DataSetImageNet(object):
       all_labels = train_labels1+train_labels2+test_labels
       num_classes = 1000
       train_dataset_size = len(all_labels) - 50000
+      self.crop_amount = 32
+      self.cutout_size = 128
       print("train_dataset_size: {}".format(train_dataset_size))
     elif hparams.dataset == "imagenet_32":
       IMAGE_SIZE = 32
@@ -65,6 +67,8 @@ class DataSetImageNet(object):
       all_data, all_labels = self.read_pklData(hparams.data_path, datafiles)
       num_classes = 11
       train_dataset_size = 11300
+      self.crop_amount = 4
+      self.cutout_size = 16
     else:
       raise NotImplementedError('Unimplemented dataset: ', hparams.dataset)
 
@@ -138,9 +142,9 @@ class DataSetImageNet(object):
     for data in images:
       epoch_policy = self.good_policies[np.random.choice(len(self.good_policies))]
       final_img = augmentation_transforms_ImageNet.apply_policy(epoch_policy, data)
-      final_img = augmentation_transforms_ImageNet.random_flip(augmentation_transforms_ImageNet.zero_pad_and_crop(final_img, 4))
+      final_img = augmentation_transforms_ImageNet.random_flip(augmentation_transforms_ImageNet.zero_pad_and_crop(final_img, self.crop_amount))
       # Apply cutout
-      final_img = augmentation_transforms_ImageNet.cutout_numpy(final_img)
+      final_img = augmentation_transforms_ImageNet.cutout_numpy(final_img, size=self.cutout_size)
       final_imgs.append(final_img)
     batched_data = (np.array(final_imgs, np.float32), labels)
     self.curr_train_index += self.hparams.batch_size*num_gpus

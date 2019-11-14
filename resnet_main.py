@@ -135,7 +135,7 @@ class CifarModel(object):
     self._setup_misc(mode)
 
     if self.type in ["teacher", "independent_student"]:
-      self._build_graph_independent(self.images, self.labels, mode)
+      self._build_graph_independent(images, labels, mode)
 
     if self.type == "dependent_student":
       self.teacher_model = teacher_model

@@ -520,7 +520,7 @@ class CifarModelTrainer(object):
         tower_grads = []
         reuse_vars = False
 
-        if FLAGS.dataset == 'ciafr10':
+        if FLAGS.dataset == 'cifar10':
           image_size=32
           num_classes=10
         elif FLAGS.dataset == 'imagenet':

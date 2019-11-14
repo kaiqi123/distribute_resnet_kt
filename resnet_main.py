@@ -318,8 +318,8 @@ class CifarModel(object):
       # return train_op
 
     is_training = 'train' in mode
-    # if is_training:
-      # self.global_step = tf.train.get_or_create_global_step()
+    if is_training:
+      self.global_step = tf.train.get_or_create_global_step()
 
     logits, self.output_dict = build_model(images, self.num_classes, is_training, self.hparams, self.type)
     self.predictions, self.cost = helper_utils.setup_loss(logits, labels)

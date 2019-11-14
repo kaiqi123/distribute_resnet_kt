@@ -537,7 +537,6 @@ class CifarModelTrainer(object):
 
             train_logits, test_logits = self._build_models(hparams, sub_images, num_classes, reuse_vars)
             loss_op = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=train_logits, labels=sub_labels))
-            # _, cost = helper_utils.setup_loss(train_logits, sub_labels)
             loss_op = helper_utils.decay_weights(loss_op, hparams.weight_decay_rate)
             lr_rate_ph = tf.Variable(0.0, name='lrn_rate', trainable=False)
             optimizer = tf.train.MomentumOptimizer(learning_rate=lr_rate_ph, momentum=0.9, use_nesterov=True)

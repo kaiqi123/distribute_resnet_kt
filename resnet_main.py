@@ -531,8 +531,8 @@ class CifarModelTrainer(object):
 
         # Build the graph
         for i in range(FLAGS.num_gpus):
-          # with tf.device(assign_to_device('/gpu:{}'.format(i), ps_device='/cpu:0')):
-          with tf.device('/gpu:{}'.format(i)):
+          with tf.device(assign_to_device('/gpu:{}'.format(i), ps_device='/cpu:0')):
+          # with tf.device('/gpu:{}'.format(i)):
 
               # Split data between GPUs
               sub_images = images[i * hparams.batch_size: (i+1) * hparams.batch_size]

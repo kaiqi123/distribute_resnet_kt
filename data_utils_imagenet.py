@@ -64,7 +64,7 @@ class DataSetImageNet(object):
       test_labels = []
       test_data = []
       for i in range(len(test_labels_raw)):
-        if test_labels_raw[i] in train_labels:
+        if 0<=test_labels_raw[i]<30:
           test_labels.append(test_labels_raw[i])
           test_data.append(test_data_raw[i])
 

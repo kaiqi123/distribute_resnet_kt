@@ -22,6 +22,7 @@ import tensorflow as tf
 
 import custom_ops as ops
 import data_utils_cifar
+import data_utils_imagenet
 import helper_buildLoss
 import helper_utils
 import helper_cosineSimilarity
@@ -164,22 +165,22 @@ class CifarModel(object):
     self.reuse = None if (mode == 'train') else True
     # self.batch_size = self.hparams.batch_size
 
-  def _setup_images_and_labels(self, images, labels):
-    if FLAGS.dataset == 'cifar10':
-      self.num_classes = 10
-      image_size = 32
-    elif FLAGS.dataset == 'cifar100':
-      self.num_classes = 100
-      image_size = 32
-    elif FLAGS.dataset == 'caltech101':
-      self.num_classes = 102
-      image_size = 32
-    else:
-      raise ValueError("Not found dataSet name")
-    self.images = images
-    self.labels = labels
-    # self.images = tf.placeholder(dtype=tf.float32, shape=[self.batch_size, image_size, image_size, 3], name="images_placeholder")
-    # self.labels = tf.placeholder(dtype=tf.float32, shape=[self.batch_size, self.num_classes], name="labels_placeholder")
+  # def _setup_images_and_labels(self, images, labels):
+  #   if FLAGS.dataset == 'cifar10':
+  #     self.num_classes = 10
+  #     image_size = 32
+  #   elif FLAGS.dataset == 'cifar100':
+  #     self.num_classes = 100
+  #     image_size = 32
+  #   elif FLAGS.dataset == 'caltech101':
+  #     self.num_classes = 102
+  #     image_size = 32
+  #   else:
+  #     raise ValueError("Not found dataSet name")
+  #   self.images = images
+  #   self.labels = labels
+  #   # self.images = tf.placeholder(dtype=tf.float32, shape=[self.batch_size, image_size, image_size, 3], name="images_placeholder")
+  #   # self.labels = tf.placeholder(dtype=tf.float32, shape=[self.batch_size, self.num_classes], name="labels_placeholder")
 
   def assign_epoch(self, session, epoch_value):
     session.run(self._epoch_update, feed_dict={self._new_epoch: epoch_value})
@@ -356,6 +357,8 @@ class CifarModelTrainer(object):
     np.random.seed(0)
     if hparams.dataset == 'cifar10' or hparams.dataset == 'cifar100':
         self.data_loader = data_utils_cifar.DataSetCifar(hparams)
+    if hparams.dataset == 'imagenet_256' or hparams.dataset == 'imagenet_32':
+        self.data_loader = data_utils_imagenet.DataSetCifar(hparams)
     else:
       raise ValueError("Not found dataSet name")
     np.random.seed()
@@ -519,9 +522,12 @@ class CifarModelTrainer(object):
       if FLAGS.dataset == 'cifar10':
         image_size=32
         num_classes=10
-      elif FLAGS.dataset == 'imagenet':
+      elif FLAGS.dataset == 'imagenet_256':
         image_size = 256
         num_classes = 1000
+      elif FLAGS.dataset == 'imagenet_32':
+        image_size = 32
+        num_classes = 11
       else:
         raise EOFError("NOt found dataset!")
       images = tf.placeholder(dtype=tf.float32, shape=[None, image_size, image_size, 3], name="images_placeholder")
@@ -615,7 +621,7 @@ class CifarModelTrainer(object):
 
 def main(_):
 
-  if FLAGS.dataset not in ['cifar10']:
+  if FLAGS.dataset not in ['cifar10', 'imagenet_256', 'imagenet_32']:
     raise ValueError('Invalid dataset: %s' % FLAGS.dataset)
 
   hparams = tf.contrib.training.HParams(

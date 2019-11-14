@@ -575,12 +575,12 @@ class CifarModelTrainer(object):
         with tf.Session() as session:
           session.run(init)
           for step in range(1, total_steps + 1):
-            # print(step)
+            print(step)
             train_images, train_labels = self.data_loader.next_batch(FLAGS.num_gpus)
             session.run(train_op,feed_dict={images: train_images,labels: train_labels})
 
             if step % 100 == 0 or step == 1:
-              print(step)
+              print("iteration: {}".format(step))
               # accuracy = session.run(m.accuracy, feed_dict={images: train_images, labels: train_labels})
 
             # if curr_step!=0 and (curr_step % steps_per_epoch == 0 or curr_step == total_steps-1):

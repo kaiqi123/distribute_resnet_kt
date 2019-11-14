@@ -39,28 +39,36 @@ class DataSetImageNet(object):
     self.good_policies = found_policies.good_policies()
 
     if hparams.dataset == "imagenet_256":
-      IMAGE_SIZE=256
-      train_datafiles1 = []
-      for i in range(1, 51):
-        train_datafiles1.append("train_"+str(i)+".pkl")
-      train_data1, train_labels1 = self.read_pklData(hparams.data_path, train_datafiles1)
-
-      train_datafiles2 = []
-      for i in range(51, 101):
-        train_datafiles2.append("train_"+str(i)+".pkl")
-      train_data2, train_labels2 = self.read_pklData(hparams.data_path, train_datafiles2)
-
-      test_datafiles = ['test_1.pkl', 'test_2.pkl', 'test_3.pkl', 'test_4.pkl', 'test_5.pkl']
-      test_data, test_labels = self.read_pklData(hparams.data_path, test_datafiles)
-
-      all_data = train_data1+train_data2+test_data
-      all_data = np.array(all_data)
-      all_labels = train_labels1+train_labels2+test_labels
-      num_classes = 1000
-      train_dataset_size = len(all_labels) - 50000
+      IMAGE_SIZE = 256
+      datafiles = ['train_1.pkl','train_2.pkl']
+      all_data, all_labels = self.read_pklData(hparams.data_path, datafiles)
+      num_classes = 11
+      train_dataset_size = 11300
       self.crop_amount = 32
       self.cutout_size = 128
-      print("train_dataset_size: {}".format(train_dataset_size))
+
+      # IMAGE_SIZE=256
+      # train_datafiles1 = []
+      # for i in range(1, 51):
+      #   train_datafiles1.append("train_"+str(i)+".pkl")
+      # train_data1, train_labels1 = self.read_pklData(hparams.data_path, train_datafiles1)
+      #
+      # train_datafiles2 = []
+      # for i in range(51, 101):
+      #   train_datafiles2.append("train_"+str(i)+".pkl")
+      # train_data2, train_labels2 = self.read_pklData(hparams.data_path, train_datafiles2)
+      #
+      # test_datafiles = ['test_1.pkl', 'test_2.pkl', 'test_3.pkl', 'test_4.pkl', 'test_5.pkl']
+      # test_data, test_labels = self.read_pklData(hparams.data_path, test_datafiles)
+      #
+      # all_data = train_data1+train_data2+test_data
+      # all_data = np.array(all_data)
+      # all_labels = train_labels1+train_labels2+test_labels
+      # num_classes = 1000
+      # train_dataset_size = len(all_labels) - 50000
+      # self.crop_amount = 32
+      # self.cutout_size = 128
+      # print("train_dataset_size: {}".format(train_dataset_size))
     elif hparams.dataset == "imagenet_32":
       IMAGE_SIZE = 32
       datafiles = ['train_1.pkl', 'train_2.pkl', 'train_3.pkl', 'train_4.pkl', 'train_5.pkl', 'test.pkl']

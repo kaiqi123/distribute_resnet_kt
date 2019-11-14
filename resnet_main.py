@@ -146,7 +146,7 @@ class CifarModel(object):
       self.teacher_saver = tf.train.Saver(teacher_variables_to_restore)
 
     # self.summary_op = self.summary_ops()
-    self.init = tf.group(tf.global_variables_initializer(), tf.local_variables_initializer())
+    # self.init = tf.group(tf.global_variables_initializer(), tf.local_variables_initializer())
 
   # def summary_ops(self):
   #     if self.type == "independent_student" or self.type == "teacher":
@@ -562,8 +562,9 @@ class CifarModelTrainer(object):
         tf.logging.info('Steps per epoch: {}'.format(steps_per_epoch))
         tf.logging.info("Total_steps {}".format(total_steps))
 
+        init = tf.global_variables_initializer()
         with tf.Session() as session:
-
+          session.run(init)
           for step in range(1, total_steps + 1):
             print(step)
             train_images, train_labels = self.data_loader.next_batch()

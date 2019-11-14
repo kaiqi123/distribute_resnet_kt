@@ -54,7 +54,6 @@ tf.flags.DEFINE_string('teacher_model_name', '#', 'the name of teacher model')
 # tf.flags.DEFINE_string("job_name", "#", "One of 'ps', 'worker'")
 # tf.flags.DEFINE_integer("task_index", 0, "Index of task within the job")
 tf.flags.DEFINE_integer("num_gpus", 4, "num_gpus")
-num_gpus = 4
 
 FLAGS = tf.flags.FLAGS
 arg_scope = tf.contrib.framework.arg_scope

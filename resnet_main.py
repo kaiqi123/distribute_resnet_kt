@@ -536,19 +536,20 @@ class CifarModelTrainer(object):
             sub_labels = labels[i * hparams.batch_size: (i+1) * hparams.batch_size]
 
             train_logits, test_logits = self._build_models(hparams, sub_images, num_classes, reuse_vars)
-            train_predictions, cost = helper_utils.setup_loss(train_logits, sub_labels)
-            cost = helper_utils.decay_weights(cost, hparams.weight_decay_rate)
+            loss_op = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=train_logits, labels=sub_labels))
+            # _, cost = helper_utils.setup_loss(train_logits, sub_labels)
+            loss_op = helper_utils.decay_weights(loss_op, hparams.weight_decay_rate)
             lr_rate_ph = tf.Variable(0.0, name='lrn_rate', trainable=False)
             optimizer = tf.train.MomentumOptimizer(learning_rate=lr_rate_ph, momentum=0.9, use_nesterov=True)
-            grads_tvars = optimizer.compute_gradients(cost)
+            grads_tvars = optimizer.compute_gradients(loss_op)
 
             if i == 0:
-              test_predictions, _ = helper_utils.setup_loss(test_logits, sub_labels)
-              train_accuracy, train_eval_op = tf.metrics.accuracy(tf.argmax(sub_labels, 1), tf.argmax(train_predictions, 1))
-              test_accuracy, test_eval_op = tf.metrics.accuracy(tf.argmax(sub_labels, 1), tf.argmax(test_predictions, 1))
+              # test_predictions, _ = helper_utils.setup_loss(test_logits, sub_labels)
+              # train_accuracy, train_eval_op = tf.metrics.accuracy(tf.argmax(sub_labels, 1), tf.argmax(train_predictions, 1))
+              # test_accuracy, test_eval_op = tf.metrics.accuracy(tf.argmax(sub_labels, 1), tf.argmax(test_predictions, 1))
 
-              # correct_pred = tf.equal(tf.argmax(test_logits, 1), tf.argmax(sub_labels, 1))
-              # accuracy = tf.reduce_mean(tf.cast(correct_pred, tf.float32))
+              correct_pred = tf.equal(tf.argmax(test_logits, 1), tf.argmax(sub_labels, 1))
+              accuracy = tf.reduce_mean(tf.cast(correct_pred, tf.float32))
 
             reuse_vars = True
             tower_grads.append(grads_tvars)
@@ -577,22 +578,35 @@ class CifarModelTrainer(object):
           start_epoch_time = time.time()
 
           train_images, train_labels = self.data_loader.next_batch(FLAGS.num_gpus)
-          _,_ = session.run([train_op, train_eval_op],feed_dict={images: train_images,labels: train_labels})
+          ts = time.time()
+          _,_ = session.run(train_op,feed_dict={images: train_images,labels: train_labels})
+          te = time.time() - ts
+
+          if curr_step % 5 == 0 or curr_step == 1:
+            loss, acc = session.run([loss_op, accuracy], feed_dict={images: train_images, labels: train_labels})
+            print("Step " + str(curr_step) + ": Minibatch Loss= " + \
+                  "{:.4f}".format(loss) + ", Training Accuracy= " + \
+                  "{:.3f}".format(acc) + ", %i Examples/sec" % int(len(train_images) / te))
 
           if curr_step!=0 and (curr_step % steps_per_epoch == 0 or curr_step == total_steps-1):
             curr_epoch = int(curr_step / steps_per_epoch)
             tf.logging.info("curr_step: {}, curr_epoch: {}".format(curr_step, curr_epoch))
 
-            training_accuracy_value = session.run(train_accuracy)
-            # train_accuracy_value = helper_utils.eval_child_model(FLAGS.num_gpus, session, hparams, test_eval_op, test_accuracy, self.data_loader, 'eval_train')
-            # test_accuracy_value = helper_utils.eval_child_model(FLAGS.num_gpus, session, hparams, test_eval_op, test_accuracy, self.data_loader, 'test')
+            print("Testing Accuracy:", \
+                  np.mean([session.run(accuracy, feed_dict={images: self.data_loader.test_images.images[i:i + hparams.batch_size],
+                                                         labels: self.data_loader.test_labels[i:i + hparams.batch_size]})
+                           for i in range(0, len(self.data_loader.test_images), hparams.batch_size)]))
 
-            training_accuracy_list.append(training_accuracy_value)
-            # train_accuracy_list.append(train_accuracy_value)
-            # test_accuracy_list.append(test_accuracy_value)
-            print('Training Acc List: {}'.format(training_accuracy_list))
-            # print('Eval Train Acc List: {}'.format(train_accuracy_list))
-            # print('Test Acc List: {}'.format(test_accuracy_list))
+
+            # training_accuracy_value = session.run(train_accuracy)
+            # train_accuracy_value = helper_utils.eval_child_model(FLAGS.num_gpus, session, hparams, test_eval_op, test_accuracy, self.data_loader, 'eval_train')
+            # # test_accuracy_value = helper_utils.eval_child_model(FLAGS.num_gpus, session, hparams, test_eval_op, test_accuracy, self.data_loader, 'test')
+            # training_accuracy_list.append(training_accuracy_value)
+            # # train_accuracy_list.append(train_accuracy_value)
+            # # test_accuracy_list.append(test_accuracy_value)
+            # print('Training Acc List: {}'.format(training_accuracy_list))
+            # # print('Eval Train Acc List: {}'.format(train_accuracy_list))
+            # # print('Test Acc List: {}'.format(test_accuracy_list))
             tf.logging.info('Epoch time(min): {}\n'.format((time.time() - start_epoch_time) / 60.0))
             start_epoch_time = time.time()
 

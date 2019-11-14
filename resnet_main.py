@@ -513,7 +513,6 @@ class CifarModelTrainer(object):
     hparams = self.hparams
     start_time = time.time()
 
-    # with tf.Graph().as_default():
     with tf.device('/cpu:0'):
       tower_grads = []
       reuse_vars = False
@@ -532,31 +531,30 @@ class CifarModelTrainer(object):
       # Build the graph
       for i in range(FLAGS.num_gpus):
         with tf.device(assign_to_device('/gpu:{}'.format(i), ps_device='/cpu:0')):
-        # with tf.device('/gpu:{}'.format(i)):
 
-            # Split data between GPUs
             sub_images = images[i * hparams.batch_size: (i+1) * hparams.batch_size]
             sub_labels = labels[i * hparams.batch_size: (i+1) * hparams.batch_size]
 
             train_logits, test_logits = self._build_models(hparams, sub_images, num_classes, reuse_vars)
-            # predictions, cost = helper_utils.setup_loss(train_logits, sub_labels)
-            # cost = helper_utils.decay_weights(cost, hparams.weight_decay_rate)
-            cost = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=train_logits, labels=sub_labels))
-            optimizer = tf.train.MomentumOptimizer(learning_rate=0.1, momentum=0.9, use_nesterov=True)
+            predictions, cost = helper_utils.setup_loss(train_logits, sub_labels)
+            cost = helper_utils.decay_weights(cost, hparams.weight_decay_rate)
+            lr_rate_ph = tf.Variable(0.0, name='lrn_rate', trainable=False)
+            optimizer = tf.train.MomentumOptimizer(learning_rate=lr_rate_ph, momentum=0.9, use_nesterov=True)
             grads_tvars = optimizer.compute_gradients(cost)
             if i == 0:
-              # accuracy, eval_op = tf.metrics.accuracy(tf.argmax(sub_labels, 1), tf.argmax(predictions, 1))
-              correct_pred = tf.equal(tf.argmax(test_logits, 1), tf.argmax(sub_labels, 1))
-              accuracy = tf.reduce_mean(tf.cast(correct_pred, tf.float32))
+              accuracy, eval_op = tf.metrics.accuracy(tf.argmax(sub_labels, 1), tf.argmax(predictions, 1))
+              # correct_pred = tf.equal(tf.argmax(test_logits, 1), tf.argmax(sub_labels, 1))
+              # accuracy = tf.reduce_mean(tf.cast(correct_pred, tf.float32))
 
             reuse_vars = True
             tower_grads.append(grads_tvars)
 
       tower_grads = self.average_gradients(tower_grads)
-      train_op = optimizer.apply_gradients(tower_grads)
-      # train_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
-      # with tf.control_dependencies([apply_op]):
-      #   train_op = tf.group(*train_ops)
+      # train_op = optimizer.apply_gradients(tower_grads)
+      apply_op = optimizer.apply_gradients(tower_grads)
+      train_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
+      with tf.control_dependencies([apply_op]):
+        train_op = tf.group(*train_ops)
 
       training_accuracy_list = []
       train_accuracy_list = []
@@ -568,31 +566,25 @@ class CifarModelTrainer(object):
       tf.logging.info('Steps per epoch: {}'.format(steps_per_epoch))
       tf.logging.info("Total_steps {}".format(total_steps))
 
-      init = tf.global_variables_initializer()
+      init = tf.group(tf.global_variables_initializer(), tf.local_variables_initializer())
       with tf.Session() as session:
         session.run(init)
-        for step in range(1, total_steps + 1):
-          print(step)
+        for curr_step in range(1, total_steps + 1):
+          start_epoch_time = time.time()
+
           train_images, train_labels = self.data_loader.next_batch(FLAGS.num_gpus)
-
-          ts = time.time()
           session.run(train_op,feed_dict={images: train_images,labels: train_labels})
-          te = time.time() - ts
-          print(te)
 
-          if step % 100 == 0 or step == 1:
-            print("iteration: {}".format(step))
-            # accuracy = session.run(m.accuracy, feed_dict={images: train_images, labels: train_labels})
+          if curr_step!=0 and (curr_step % steps_per_epoch == 0 or curr_step == total_steps-1):
+            curr_epoch = int(curr_step / steps_per_epoch)
+            tf.logging.info("curr_step: {}, curr_epoch: {}".format(curr_step, curr_epoch))
+            training_accuracy = session.run(accuracy)
+            training_accuracy_list.append(float(training_accuracy))
 
-          # if curr_step!=0 and (curr_step % steps_per_epoch == 0 or curr_step == total_steps-1):
-          #   curr_epoch = int(curr_step / steps_per_epoch)
-          #   tf.logging.info("curr_step: {}, curr_epoch: {}".format(curr_step, curr_epoch))
-          #   training_accuracy_list = helper_utils.show_accuracy_list(session, curr_epoch, m, self.data_loader, training_accuracy_list, train_accuracy_list, test_accuracy_list)
-          #   if FLAGS.task_index == 0:
-          #     tf.logging.info('Training Acc List: {}'.format(training_accuracy_list))
-          #
-          #   tf.logging.info('Epoch time(min): {}\n'.format((time.time() - start_epoch_time) / 60.0))
-          #   start_epoch_time = time.time()
+            # training_accuracy_list = helper_utils.show_accuracy_list(session, curr_epoch, m, self.data_loader, training_accuracy_list, train_accuracy_list, test_accuracy_list)
+            tf.logging.info('Training Acc List: {}'.format(training_accuracy_list))
+            tf.logging.info('Epoch time(min): {}\n'.format((time.time() - start_epoch_time) / 60.0))
+            start_epoch_time = time.time()
 
     end_time = time.time()
     runtime = round((end_time - start_time) / (60 * 60), 2)

@@ -47,7 +47,7 @@ class DataSetImageNet(object):
 
       train_datafiles2 = []
       for i in range(51, 101):
-        train_datafiles1.append("train_"+str(i)+".pkl")
+        train_datafiles2.append("train_"+str(i)+".pkl")
       train_data2, train_labels2 = self.read_pklData(hparams.data_path, train_datafiles2)
 
       test_datafiles = ['test_1.pkl', 'test_2.pkl', 'test_3.pkl', 'test_4.pkl', 'test_5.pkl']
@@ -119,7 +119,7 @@ class DataSetImageNet(object):
           labels = d['labels']
           all_data = all_data + list(data)
           all_labels = all_labels + labels
-      #all_data = np.array(all_data)
+      all_data = np.array(all_data)
       return all_data, all_labels
 
   def next_batch(self):

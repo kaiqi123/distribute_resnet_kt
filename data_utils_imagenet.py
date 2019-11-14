@@ -9,7 +9,7 @@ import augmentation_transforms_ImageNet
 import numpy as np
 import policies as found_policies
 import tensorflow as tf
-#import dill
+import dill
 
 try:
   import cPickle
@@ -149,12 +149,12 @@ class DataSetImageNet(object):
 
 def unpickle(f):
   print('loading file: {}'.format(f))
-  try:
-    fo = tf.gfile.Open(f, 'r')
-    d = cPickle.load(fo)
-  except TypeError:
-    dill._dill._reverse_typemap["ObjectType"] = object
-    fo = tf.gfile.Open(f, 'rb')
-    d = cPickle.load(fo, encoding='latin1')
+  # try:
+  #   fo = tf.gfile.Open(f, 'r')
+  #   d = cPickle.load(fo)
+  # except TypeError:
+  dill._dill._reverse_typemap["ObjectType"] = object
+  fo = tf.gfile.Open(f, 'rb')
+  d = cPickle.load(fo, encoding='latin1')
   fo.close()
   return d

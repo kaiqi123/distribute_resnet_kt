@@ -43,10 +43,12 @@ class DataSetImageNet(object):
       datafiles = []
       for i in range(1, 101):
         datafiles.append("train_"+str(i)+".pkl")
-      datafiles.append('test.pkl')
+      test_datafiles = ['test_1.pkl', 'test_2.pkl', 'test_3.pkl', 'test_4.pkl', 'test_5.pkl']
+      datafiles = datafiles+test_datafiles
       all_data, all_labels = self.read_pklData(hparams.data_path, datafiles)
       num_classes = 1000
       train_dataset_size = len(all_labels) - 50000
+      print("train_dataset_size: {}".format(train_dataset_size))
     elif hparams.dataset == "imagenet_32":
       IMAGE_SIZE = 32
       datafiles = ['train_1.pkl', 'train_2.pkl', 'train_3.pkl', 'train_4.pkl', 'train_5.pkl', 'test.pkl']

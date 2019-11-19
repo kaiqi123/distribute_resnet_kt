@@ -17,27 +17,9 @@ class DataSetCifar(object):
 
   def __init__(self, hparams):
     self.hparams = hparams
-    self.good_policies = found_policies.good_policies()
     self.epochs = 0
     self.curr_train_index = 0
-
-    # if hparams.dataset == 'cifar10':
-    #   train_dataset_path = ""
-    # else:
-    #   raise NotImplementedError('Unimplemented dataset: ', hparams.dataset)
-
-    # filename_queue = tf.train.string_input_producer([train_dataset_path], num_epochs=None)
-    # _, value_temp = tf.TextLineReader().read(filename_queue)
-    # record_defaults = [[1], ['']]
-    # label, image_path = tf.decode_csv(value_temp, record_defaults=record_defaults)
-    #
-    # file_content = tf.read_file(image_path)
-    # train_image = tf.image.decode_jpeg(file_content, channels=num_channels)
-    #
-    # epoch_policy = self.good_policies[np.random.choice(len(self.good_policies))]
-    # final_img = augmentation_transforms.apply_policy(epoch_policy, file_content)
-    # final_img = augmentation_transforms.random_flip(augmentation_transforms.zero_pad_and_crop(final_img, 4))
-    # final_img = augmentation_transforms.cutout_numpy(final_img)
+    self.good_policies = found_policies.good_policies()
 
     if hparams.dataset == 'cifar10':
       tf.logging.info('Cifar10')
@@ -112,7 +94,6 @@ class DataSetCifar(object):
 
     images, labels = batched_data
     for data in images:
-      print("type of data".format(type(data)))
       epoch_policy = self.good_policies[np.random.choice(len(self.good_policies))]
       final_img = augmentation_transforms.apply_policy(epoch_policy, data)
       final_img = augmentation_transforms.random_flip(augmentation_transforms.zero_pad_and_crop(final_img, 4))

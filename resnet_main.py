@@ -2,7 +2,6 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-import contextlib
 try:
     from contextlib import nested
 except ImportError:
@@ -16,22 +15,17 @@ except ImportError:
 # import logging
 import os
 import time
-import json
 import numpy as np
 import tensorflow as tf
 
 # import data_utils_cifar
-import data_utils_cifar_readImgPipeline as data_utils_cifar
+from record import data_utils_cifar_readImgPipeline as data_utils_cifar
 # import data_utils_imagenet
 
 import custom_ops as ops
 import helper_buildLoss
 import helper_utils
-import helper_cosineSimilarity
-import helper_buildLoss_comparedMethods
-import helper_buildLoss_DeCAF
 import wrn_student_comparedMethod
-import helper_output_analyze
 from wrn import build_wrn_model_independentStudent
 from wrn import build_wrn_model_teacher
 

@@ -20,9 +20,11 @@ import json
 import numpy as np
 import tensorflow as tf
 
-import custom_ops as ops
-import data_utils_cifar
+# import data_utils_cifar
+import data_utils_cifar_readImgPipeline as data_utils_cifar
 import data_utils_imagenet
+
+import custom_ops as ops
 import helper_buildLoss
 import helper_utils
 import helper_cosineSimilarity
@@ -601,6 +603,7 @@ class CifarModelTrainer(object):
             test_accuracy_list.append(test_accuracy_per_epoch)
             training_accuracy_list.append(acc)
             print("Testing Accuracy: {}".format(test_accuracy_per_epoch))
+
             print("Training Accuracy List: {}".format(training_accuracy_list))
             print("Testing Accuracy List: {}".format(test_accuracy_list))
             print('Epoch time(min): {}\n'.format((time.time() - start_epoch_time) / 60.0))

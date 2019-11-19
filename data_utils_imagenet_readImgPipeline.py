@@ -46,7 +46,6 @@ class DataSetImageNet(object):
       train_dataset_size = 11300
       self.crop_amount = 32
       self.cutout_size = 128
-
     elif hparams.dataset == "imagenet_32":
       IMAGE_SIZE = 32
       datafiles = ['train_1.pkl', 'train_2.pkl', 'train_3.pkl', 'train_4.pkl', 'train_5.pkl', 'test.pkl']

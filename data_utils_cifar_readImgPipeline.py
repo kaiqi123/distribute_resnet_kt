@@ -1,36 +1,19 @@
-# -*- coding: utf-8 -*-
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
 import copy
 import os
-import augmentation_transforms_ImageNet
+import augmentation_transforms
 import numpy as np
 import policies as found_policies
 import tensorflow as tf
-import dill
-
 try:
   import cPickle
 except ImportError:
   import _pickle as cPickle
 
-"""
-note: change  augmentation_transforms_ImageNet.py !!!!
-Changed things:
-augmentation_transforms_ImageNet.py
-zero_pad_and_crop 32
-cutout_numpy 128
-IMAGE_SIZE 256
-mean
-std
-num_classes = 11 #1000
-train_dataset_size = 11300 #1281167
-"""
-
-
-class DataSetImageNet(object):
+class DataSetCifar(object):
 
   def __init__(self, hparams):
     self.hparams = hparams
@@ -38,43 +21,28 @@ class DataSetImageNet(object):
     self.curr_train_index = 0
     self.good_policies = found_policies.good_policies()
 
-    if hparams.dataset == "imagenet_256":
-      IMAGE_SIZE = 256
-      datafiles = ['train_1.pkl', 'train_2.pkl', 'train_3.pkl', 'train_4.pkl', 'train_5.pkl', 'test.pkl']
+    if hparams.dataset == 'cifar10':
+      tf.logging.info('Cifar10')
+      datafiles = ['data_batch_1', 'data_batch_2', 'data_batch_3', 'data_batch_4', 'data_batch_5','test_batch']
       all_data, all_labels = self.read_pklData(hparams.data_path, datafiles)
-      num_classes = 11
-      train_dataset_size = 11300
-      self.crop_amount = 32
-      self.cutout_size = 128
-
-    elif hparams.dataset == "imagenet_32":
-      IMAGE_SIZE = 32
-      datafiles = ['train_1.pkl', 'train_2.pkl', 'train_3.pkl', 'train_4.pkl', 'train_5.pkl', 'test.pkl']
-      all_data, all_labels = self.read_pklData(hparams.data_path, datafiles)
-      num_classes = 11
-      train_dataset_size = 11300
-      self.crop_amount = 4
-      self.cutout_size = 16
+      num_classes = 10
+      train_dataset_size = hparams.train_size
+      total_dataset_size = hparams.train_size + hparams.test_size
     else:
       raise NotImplementedError('Unimplemented dataset: ', hparams.dataset)
 
-    print(type(all_data), all_data.shape)
-    all_data = all_data.reshape(-1, 3, IMAGE_SIZE, IMAGE_SIZE)
+    all_data = all_data.reshape(total_dataset_size, 3072)
+    all_data = all_data.reshape(-1, 3, 32, 32)
     all_data = all_data.transpose(0, 2, 3, 1).copy()
     all_data = all_data / 255.0
-    print(type(all_data), all_data.shape)
-    print(type(all_labels), len(all_labels))
-
-    # mean = np.mean(all_data,axis=(0,1,2))
-    # std = np.std(all_data,axis=(0,1,2))
-    mean = augmentation_transforms_ImageNet.MEANS
-    std = augmentation_transforms_ImageNet.STDS
-    print('mean:{}    std: {}'.format(mean, std))
+    mean = augmentation_transforms.MEANS
+    std = augmentation_transforms.STDS
+    tf.logging.info('mean:{}    std: {}'.format(mean, std))
     all_data = (all_data - mean) / std
 
     all_labels = np.eye(num_classes)[np.array(all_labels, dtype=np.int32)]
     assert len(all_data) == len(all_labels)
-    print('In ImageNet loader, number of images: {}'.format(len(all_data)))
+    tf.logging.info('In CIFAR10 loader, number of images: {}'.format(len(all_data)))
 
     # Break off test data
     if hparams.eval_test:
@@ -127,14 +95,15 @@ class DataSetImageNet(object):
     images, labels = batched_data
     for data in images:
       epoch_policy = self.good_policies[np.random.choice(len(self.good_policies))]
-      final_img = augmentation_transforms_ImageNet.apply_policy(epoch_policy, data)
-      final_img = augmentation_transforms_ImageNet.random_flip(augmentation_transforms_ImageNet.zero_pad_and_crop(final_img, self.crop_amount))
+      final_img = augmentation_transforms.apply_policy(epoch_policy, data)
+      final_img = augmentation_transforms.random_flip(augmentation_transforms.zero_pad_and_crop(final_img, 4))
       # Apply cutout
-      final_img = augmentation_transforms_ImageNet.cutout_numpy(final_img, size=self.cutout_size)
+      final_img = augmentation_transforms.cutout_numpy(final_img)
       final_imgs.append(final_img)
     batched_data = (np.array(final_imgs, np.float32), labels)
     self.curr_train_index += self.hparams.batch_size*num_gpus
     return batched_data
+
 
   def reset(self):
     """Reset training data and index into the training data."""
@@ -147,15 +116,13 @@ class DataSetImageNet(object):
     self.train_labels = self.train_labels[perm]
     self.curr_train_index = 0
 
-
 def unpickle(f):
   print('loading file: {}'.format(f))
-  # try:
-  #   fo = tf.gfile.Open(f, 'r')
-  #   d = cPickle.load(fo)
-  # except TypeError:
-  dill._dill._reverse_typemap["ObjectType"] = object
-  fo = tf.gfile.Open(f, 'rb')
-  d = cPickle.load(fo, encoding='latin1')
+  try:
+    fo = tf.gfile.Open(f, 'r')
+    d = cPickle.load(fo)
+  except UnicodeDecodeError:
+    fo = tf.gfile.Open(f, 'rb')
+    d = cPickle.load(fo, encoding='latin1')
   fo.close()
   return d

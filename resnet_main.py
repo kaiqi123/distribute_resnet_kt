@@ -591,6 +591,9 @@ class CifarModelTrainer(object):
             curr_epoch = int(curr_step / steps_per_epoch)
             tf.logging.info("curr_step: {}, curr_epoch: {}, lr: {}".format(curr_step, curr_epoch, curr_lr))
 
+            num_trainable_params = np.sum([np.prod(var.get_shape().as_list()) for var in tf.trainable_variables()])
+            print('number of trainable params: {}'.format(num_trainable_params))
+
             test_accuracy_per_epoch = np.mean([session.run(accuracy, feed_dict={
               images: self.data_loader.test_images[i:i + hparams.batch_size],
               labels: self.data_loader.test_labels[i:i + hparams.batch_size]})

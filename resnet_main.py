@@ -355,6 +355,7 @@ class CifarModelTrainer(object):
     self.log_dir = os.path.join(FLAGS.checkpoint_dir, 'log')
 
     np.random.seed(0)
+    print(hparams.dataset)
     if hparams.dataset == 'cifar10' or hparams.dataset == 'cifar100':
         self.data_loader = data_utils_cifar.DataSetCifar(hparams)
     if hparams.dataset == 'imagenet_256' or hparams.dataset == 'imagenet_32':

@@ -112,7 +112,7 @@ class DataSetCifar(object):
 
     images, labels = batched_data
     for data in images:
-      print("type of data".format(type(data)))
+      print("type of data: {}".format(type(data)))
       epoch_policy = self.good_policies[np.random.choice(len(self.good_policies))]
       final_img = augmentation_transforms.apply_policy(epoch_policy, data)
       final_img = augmentation_transforms.random_flip(augmentation_transforms.zero_pad_and_crop(final_img, 4))

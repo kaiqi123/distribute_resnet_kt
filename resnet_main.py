@@ -22,7 +22,7 @@ import tensorflow as tf
 
 # import data_utils_cifar
 import data_utils_cifar_readImgPipeline as data_utils_cifar
-import data_utils_imagenet
+# import data_utils_imagenet
 
 import custom_ops as ops
 import helper_buildLoss

@@ -560,8 +560,8 @@ class CifarModelTrainer(object):
       training_accuracy_list = []
       test_accuracy_list = []
       steps_per_epoch = int(hparams.train_size / (hparams.batch_size * FLAGS.num_gpus))
-      total_steps = hparams.num_epochs * steps_per_epoch
-
+      # total_steps = hparams.num_epochs * steps_per_epoch
+      total_steps = 200
       init = tf.group(tf.global_variables_initializer(), tf.local_variables_initializer())
       with tf.Session() as session:
         session.run(init)
@@ -584,7 +584,7 @@ class CifarModelTrainer(object):
                   "{:.3f}".format(acc) + ", %i Examples/sec" % int(len(train_images) / te) + ", lr: "+ str(curr_lr))
             # print("run time of one iteration: {}".format(te))
 
-          if curr_step % steps_per_epoch == 0 or curr_step == total_steps-1:
+          # if curr_step % steps_per_epoch == 0 or curr_step == total_steps-1:
             curr_epoch = int(curr_step / steps_per_epoch)
             tf.logging.info("curr_step: {}, curr_epoch: {}, lr: {}".format(curr_step, curr_epoch, curr_lr))
 

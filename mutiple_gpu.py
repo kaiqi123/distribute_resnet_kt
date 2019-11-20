@@ -180,8 +180,11 @@ with tf.device('/cpu:0'):
         print("Optimization Finished!")
 
         # Calculate accuracy for MNIST test images
+        start_test = time.time()
         print("Testing Accuracy:", \
             np.mean([sess.run(accuracy, feed_dict={X: mnist.test.images[i:i+batch_size],
             Y: mnist.test.labels[i:i+batch_size]}) for i in range(0, len(mnist.test.images), batch_size)]))
+        end_test = time.time()
+        print("test acc time {}".format(end_test - start_test))
 
     print("run time: {}".format(time.time()-st))

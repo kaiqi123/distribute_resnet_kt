@@ -18,8 +18,8 @@ import time
 import numpy as np
 import tensorflow as tf
 
-# import data_utils_cifar
-import data_utils_cifar_readImgPipeline as data_utils_cifar
+import data_utils_cifar
+# import data_utils_cifar_readImgPipeline as data_utils_cifar
 # import data_utils_imagenet
 
 import custom_ops as ops
@@ -543,6 +543,7 @@ class CifarModelTrainer(object):
             lr_rate_ph = tf.Variable(0.0, name='lrn_rate', trainable=False)
             optimizer = tf.train.MomentumOptimizer(learning_rate=lr_rate_ph, momentum=0.9, use_nesterov=True)
             grads_tvars = optimizer.compute_gradients(loss_op)
+
             if i == 0:
               correct_pred = tf.equal(tf.argmax(test_logits, 1), tf.argmax(sub_labels, 1))
               accuracy = tf.reduce_mean(tf.cast(correct_pred, tf.float32))
@@ -566,6 +567,7 @@ class CifarModelTrainer(object):
       init = tf.group(tf.global_variables_initializer(), tf.local_variables_initializer())
       with tf.Session() as session:
         session.run(init)
+
         for curr_step in range(1, total_steps + 1):
           start_epoch_time = time.time()
 

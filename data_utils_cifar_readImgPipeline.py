@@ -18,130 +18,56 @@ class DataSetCifar(object):
   def __init__(self, hparams):
     self.hparams = hparams
     self.good_policies = found_policies.good_policies()
-    self.epochs = 0
-    self.curr_train_index = 0
-
-    # if hparams.dataset == 'cifar10':
-    #   train_dataset_path = ""
-    # else:
-    #   raise NotImplementedError('Unimplemented dataset: ', hparams.dataset)
-
-    # filename_queue = tf.train.string_input_producer([train_dataset_path], num_epochs=None)
-    # _, value_temp = tf.TextLineReader().read(filename_queue)
-    # record_defaults = [[1], ['']]
-    # label, image_path = tf.decode_csv(value_temp, record_defaults=record_defaults)
-    #
-    # file_content = tf.read_file(image_path)
-    # train_image = tf.image.decode_jpeg(file_content, channels=num_channels)
-    #
-    # epoch_policy = self.good_policies[np.random.choice(len(self.good_policies))]
-    # final_img = augmentation_transforms.apply_policy(epoch_policy, file_content)
-    # final_img = augmentation_transforms.random_flip(augmentation_transforms.zero_pad_and_crop(final_img, 4))
-    # final_img = augmentation_transforms.cutout_numpy(final_img)
+    self.seed = 0
 
     if hparams.dataset == 'cifar10':
-      tf.logging.info('Cifar10')
-      datafiles = ['data_batch_1', 'data_batch_2', 'data_batch_3', 'data_batch_4', 'data_batch_5','test_batch']
-      all_data, all_labels = self.read_pklData(hparams.data_path, datafiles)
-      num_classes = 10
-      train_dataset_size = hparams.train_size
-      total_dataset_size = hparams.train_size + hparams.test_size
+      train_dataset_path = ""
+      test_dataset_path = ""
+      self.image_size = 32
     else:
       raise NotImplementedError('Unimplemented dataset: ', hparams.dataset)
 
-    all_data = all_data.reshape(total_dataset_size, 3072)
-    all_data = all_data.reshape(-1, 3, 32, 32)
-    all_data = all_data.transpose(0, 2, 3, 1).copy()
-    all_data = all_data / 255.0
-    mean = augmentation_transforms.MEANS
-    std = augmentation_transforms.STDS
-    tf.logging.info('mean:{}    std: {}'.format(mean, std))
-    all_data = (all_data - mean) / std
+    train_size = self.check_data(file_name=train_dataset_path)
+    self.train_image, self.train_label = self.read_one_image_label(dataset_path = train_dataset_path)
 
-    all_labels = np.eye(num_classes)[np.array(all_labels, dtype=np.int32)]
-    assert len(all_data) == len(all_labels)
-    tf.logging.info('In CIFAR10 loader, number of images: {}'.format(len(all_data)))
+    test_size = self.check_data(file_name=test_dataset_path)
+    test_image, test_label = self.read_one_image_label(dataset_path = test_dataset_path)
+    min_after_dequeue = 10000
+    capacity = min_after_dequeue + 3 * test_size
+    self.test_images, self.test_labels = tf.train.shuffle_batch(
+      [test_image, test_label], batch_size=test_size, capacity=capacity,
+      min_after_dequeue=min_after_dequeue, seed=self.seed)
 
-    # Break off test data
-    if hparams.eval_test:
-      self.test_images = all_data[train_dataset_size:]
-      self.test_labels = all_labels[train_dataset_size:]
+  def check_data(self, file_name):
+    with open(file_name) as f:
+      lines = f.readlines()
+    labels = []
+    for line in lines:
+      label = int(line.split(",")[0])
+      if label not in labels:
+        labels.append(label)
+    data_size = len(lines)
+    print("Read data from file: {}".format(file_name))
+    print("The number of data is: {}".format(data_size))
+    print("The labels are: {}".format(sorted(labels)))
+    return data_size
 
-    # Shuffle the rest of the data
-    all_data = all_data[:train_dataset_size]
-    all_labels = all_labels[:train_dataset_size]
-    np.random.seed(0)
-    perm = np.arange(len(all_data))
-    np.random.shuffle(perm)
-    all_data = all_data[perm]
-    all_labels = all_labels[perm]
-
-    # Break into train and val
-    train_size, val_size = hparams.train_size, hparams.validation_size
-    assert train_dataset_size >= train_size + val_size
-    assert train_dataset_size == train_size
-    self.train_images = all_data[:train_size]
-    self.train_labels = all_labels[:train_size]
-    self.val_images = all_data[train_size:train_size + val_size]
-    self.val_labels = all_labels[train_size:train_size + val_size]
-    self.num_train = self.train_images.shape[0]
-
-  def read_pklData(self, data_path, datafiles):
-      all_data = []
-      all_labels = []
-      for file_num, f in enumerate(datafiles):
-          d = unpickle(os.path.join(data_path, f))
-          data = d['data']
-          labels = d['labels']
-          all_data = all_data + list(data)
-          all_labels = all_labels + labels
-      all_data = np.array(all_data)
-      return all_data, all_labels
+  def read_one_image_label(self, dataset_path):
+    filename_queue = tf.train.string_input_producer([dataset_path], num_epochs=None)
+    _, value_temp = tf.TextLineReader().read(filename_queue)
+    record_defaults = [[1], ['']]
+    label, image_path = tf.decode_csv(value_temp, record_defaults=record_defaults)
+    file_content = tf.read_file(image_path)
+    image = tf.image.decode_jpeg(file_content, channels=3)
+    image = tf.image.per_image_standardization(image)
+    image = tf.image.resize_images(image, [self.image_size, self.image_size])
+    return image, label
 
   def next_batch(self, num_gpus):
-    """Return the next minibatch of augmented data."""
-    next_train_index = self.curr_train_index + self.hparams.batch_size*num_gpus
-    if next_train_index > self.num_train:
-      # Increase epoch number
-      epoch = self.epochs + 1
-      self.reset()
-      self.epochs = epoch
-    batched_data = (self.train_images[self.curr_train_index: self.curr_train_index + self.hparams.batch_size*num_gpus],
-                    self.train_labels[self.curr_train_index: self.curr_train_index + self.hparams.batch_size*num_gpus])
-    final_imgs = []
-
-    images, labels = batched_data
-    for data in images:
-      print("type of data: {}".format(type(data)))
-      epoch_policy = self.good_policies[np.random.choice(len(self.good_policies))]
-      final_img = augmentation_transforms.apply_policy(epoch_policy, data)
-      final_img = augmentation_transforms.random_flip(augmentation_transforms.zero_pad_and_crop(final_img, 4))
-      # Apply cutout
-      final_img = augmentation_transforms.cutout_numpy(final_img)
-      final_imgs.append(final_img)
-    batched_data = (np.array(final_imgs, np.float32), labels)
-    self.curr_train_index += self.hparams.batch_size*num_gpus
-    return batched_data
-
-
-  def reset(self):
-    """Reset training data and index into the training data."""
-    self.epochs = 0
-    # Shuffle the training data
-    perm = np.arange(self.num_train)
-    np.random.shuffle(perm)
-    assert self.num_train == self.train_images.shape[0], 'Error incorrect shuffling mask'
-    self.train_images = self.train_images[perm]
-    self.train_labels = self.train_labels[perm]
-    self.curr_train_index = 0
-
-def unpickle(f):
-  print('loading file: {}'.format(f))
-  try:
-    fo = tf.gfile.Open(f, 'r')
-    d = cPickle.load(fo)
-  except UnicodeDecodeError:
-    fo = tf.gfile.Open(f, 'rb')
-    d = cPickle.load(fo, encoding='latin1')
-  fo.close()
-  return d
+    batch_size_total = self.hparams.batch_size * num_gpus
+    min_after_dequeue = 10000
+    capacity = min_after_dequeue + 3 * batch_size_total
+    self.train_images_batch, self.train_labels_batch = tf.train.shuffle_batch(
+      [self.train_image, self.train_label], batch_size=batch_size_total, capacity=capacity,
+      min_after_dequeue=min_after_dequeue, seed=self.seed)
+    return self.train_images_batch, self.train_labels_batch

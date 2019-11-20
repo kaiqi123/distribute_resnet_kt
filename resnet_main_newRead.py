@@ -18,8 +18,8 @@ import time
 import numpy as np
 import tensorflow as tf
 
-import data_utils_cifar
-# import data_utils_cifar_readImgPipeline as data_utils_cifar
+# import data_utils_cifar
+import data_utils_cifar_readImgPipeline as data_utils_cifar
 # import data_utils_imagenet
 
 import custom_ops as ops
@@ -561,7 +561,7 @@ class CifarModelTrainer(object):
       test_accuracy_list = []
       steps_per_epoch = int(hparams.train_size / (hparams.batch_size * FLAGS.num_gpus))
       # total_steps = hparams.num_epochs * steps_per_epoch
-      total_steps = 20
+      total_steps = 320
       init = tf.group(tf.global_variables_initializer(), tf.local_variables_initializer())
       with tf.Session() as session:
         session.run(init)
@@ -573,6 +573,8 @@ class CifarModelTrainer(object):
           lr_rate_ph.load(curr_lr, session=session)
 
           train_images, train_labels = self.data_loader.next_batch(FLAGS.num_gpus)
+          train_images, train_labels = session.run([train_images, train_labels])
+
           ts = time.time()
           session.run(train_op,feed_dict={images: train_images,labels: train_labels})
           te = time.time() - ts

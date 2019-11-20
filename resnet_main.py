@@ -566,8 +566,8 @@ class CifarModelTrainer(object):
       with tf.Session() as session:
         session.run(init)
 
+        start_epoch_time = time.time()
         for curr_step in range(1, total_steps + 1):
-          start_epoch_time = time.time()
 
           curr_lr = helper_utils.get_lr(hparams=hparams, t_cur=curr_step)
           lr_rate_ph.load(curr_lr, session=session)

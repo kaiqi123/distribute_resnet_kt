@@ -593,10 +593,13 @@ class CifarModelTrainer(object):
             print('Steps per epoch: {}'.format(steps_per_epoch))
             print("Total_steps {}".format(total_steps))
 
+            stt = time.time()
             test_accuracy_per_epoch = np.mean([session.run(accuracy, feed_dict={
               images: self.data_loader.test_images[i:i + hparams.batch_size],
               labels: self.data_loader.test_labels[i:i + hparams.batch_size]})
                                      for i in range(0, len(self.data_loader.test_labels), hparams.batch_size)])
+            endt = time.time()-stt
+            print("run time: {}".format(endt))
             test_accuracy_list.append(test_accuracy_per_epoch)
             training_accuracy_list.append(acc)
             print("Testing Accuracy: {}".format(test_accuracy_per_epoch))

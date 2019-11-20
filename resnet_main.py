@@ -603,7 +603,7 @@ class CifarModelTrainer(object):
 
             print("Training Accuracy List: {}".format(training_accuracy_list))
             print("Testing Accuracy List: {}".format(test_accuracy_list))
-            print('Epoch time(min): {}\n'.format((time.time() - start_epoch_time) / 60.0))
+            print('Epoch time(s): {}\n'.format((time.time() - start_epoch_time)))
             start_epoch_time = time.time()
 
     end_time = time.time()

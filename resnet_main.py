@@ -582,16 +582,16 @@ class CifarModelTrainer(object):
             print("Step " + str(curr_step) + ": Minibatch Loss= " + \
                   "{:.4f}".format(loss) + ", Training Accuracy= " + \
                   "{:.3f}".format(acc) + ", %i Examples/sec" % int(len(train_images) / te) + ", lr: "+ str(curr_lr))
-            # print("run time of one iteration: {}".format(te))
+            print("run time of one iteration: {}".format(te))
 
           # if curr_step % steps_per_epoch == 0 or curr_step == total_steps-1:
-            curr_epoch = int(curr_step / steps_per_epoch)
-            tf.logging.info("curr_step: {}, curr_epoch: {}, lr: {}".format(curr_step, curr_epoch, curr_lr))
+          #   curr_epoch = int(curr_step / steps_per_epoch)
+          #   tf.logging.info("curr_step: {}, curr_epoch: {}, lr: {}".format(curr_step, curr_epoch, curr_lr))
 
-            num_trainable_params = np.sum([np.prod(var.get_shape().as_list()) for var in tf.trainable_variables()])
-            print('number of trainable params: {}'.format(num_trainable_params))
-            print('Steps per epoch: {}'.format(steps_per_epoch))
-            print("Total_steps {}".format(total_steps))
+            # num_trainable_params = np.sum([np.prod(var.get_shape().as_list()) for var in tf.trainable_variables()])
+            # print('number of trainable params: {}'.format(num_trainable_params))
+            # print('Steps per epoch: {}'.format(steps_per_epoch))
+            # print("Total_steps {}".format(total_steps))
 
             stt = time.time()
             test_accuracy_per_epoch = np.mean([session.run(accuracy, feed_dict={
@@ -599,7 +599,7 @@ class CifarModelTrainer(object):
               labels: self.data_loader.test_labels[i:i + hparams.batch_size]})
                                      for i in range(0, len(self.data_loader.test_labels), hparams.batch_size)])
             endt = time.time()-stt
-            print("run time: {}".format(endt))
+            print("run time of acc: {}".format(endt))
             test_accuracy_list.append(test_accuracy_per_epoch)
             training_accuracy_list.append(acc)
             print("Testing Accuracy: {}".format(test_accuracy_per_epoch))

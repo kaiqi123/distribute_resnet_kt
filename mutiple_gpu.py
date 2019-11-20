@@ -162,20 +162,24 @@ with tf.device('/cpu:0'):
         sess.run(init)
 
         # Keep training until reach max iterations
+        # start_epoch_time = time.time()
+
         for step in range(1, num_steps + 1):
+
             # Get a batch for each GPU
             batch_x, batch_y = mnist.train.next_batch(batch_size * num_gpus)
             # Run optimization op (backprop)
             ts = time.time()
             sess.run(train_op, feed_dict={X: batch_x, Y: batch_y})
             te = time.time() - ts
-            if step % display_step == 0 or step == 1:
+            if step % 1 == 0 or step == 1:
                 # Calculate batch loss and accuracy
                 loss, acc = sess.run([loss_op, accuracy], feed_dict={X: batch_x,
                                                                      Y: batch_y})
                 print("Step " + str(step) + ": Minibatch Loss= " + \
                       "{:.4f}".format(loss) + ", Training Accuracy= " + \
                       "{:.3f}".format(acc) + ", %i Examples/sec" % int(len(batch_x)/te))
+                print("run time per step: {}".format(te))
             step += 1
         print("Optimization Finished!")
 
@@ -186,5 +190,8 @@ with tf.device('/cpu:0'):
             Y: mnist.test.labels[i:i+batch_size]}) for i in range(0, len(mnist.test.images), batch_size)]))
         end_test = time.time()
         print("test acc time {}".format(end_test - start_test))
+
+        # print("run time of 1 epoch: {}".format(time.time()-start_epoch_time))
+        # start_epoch_time = time.time()
 
     print("run time: {}".format(time.time()-st))

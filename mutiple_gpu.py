@@ -154,6 +154,7 @@ with tf.device('/cpu:0'):
     # Initialize the variables (i.e. assign their default value)
     init = tf.global_variables_initializer()
 
+    st = time.time()
     # Start Training
     with tf.Session() as sess:
 
@@ -182,3 +183,5 @@ with tf.device('/cpu:0'):
         print("Testing Accuracy:", \
             np.mean([sess.run(accuracy, feed_dict={X: mnist.test.images[i:i+batch_size],
             Y: mnist.test.labels[i:i+batch_size]}) for i in range(0, len(mnist.test.images), batch_size)]))
+
+    print("run time: {}".format(time.time()-st))

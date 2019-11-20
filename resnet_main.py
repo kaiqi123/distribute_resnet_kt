@@ -577,7 +577,7 @@ class CifarModelTrainer(object):
           session.run(train_op,feed_dict={images: train_images,labels: train_labels})
           te = time.time() - ts
 
-          if curr_step % 100 == 0 or curr_step == 1:
+          if curr_step % 1 == 0 or curr_step == 1:
             loss, acc = session.run([loss_op, accuracy], feed_dict={images: train_images, labels: train_labels})
             print("Step " + str(curr_step) + ": Minibatch Loss= " + \
                   "{:.4f}".format(loss) + ", Training Accuracy= " + \

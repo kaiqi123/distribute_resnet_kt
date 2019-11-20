@@ -577,12 +577,12 @@ class CifarModelTrainer(object):
           session.run(train_op,feed_dict={images: train_images,labels: train_labels})
           te = time.time() - ts
 
-          if curr_step % 1 == 0 or curr_step == 1:
+          if curr_step % 10 == 0 or curr_step == 1:
             loss, acc = session.run([loss_op, accuracy], feed_dict={images: train_images, labels: train_labels})
             print("Step " + str(curr_step) + ": Minibatch Loss= " + \
                   "{:.4f}".format(loss) + ", Training Accuracy= " + \
                   "{:.3f}".format(acc) + ", %i Examples/sec" % int(len(train_images) / te) + ", lr: "+ str(curr_lr))
-            print("run time of one iteration: {}".format(te))
+            # print("run time of one iteration: {}".format(te))
 
           if curr_step % steps_per_epoch == 0 or curr_step == total_steps-1:
             curr_epoch = int(curr_step / steps_per_epoch)
@@ -640,7 +640,7 @@ def main(_):
 
   if 'wrn' in FLAGS.model_name:
     hparams.add_hparam('model_name', str(FLAGS.model_name))
-    hparams.add_hparam('num_epochs', 10)
+    hparams.add_hparam('num_epochs', 1)
     hparams.add_hparam('wrn_size', 160)
     hparams.add_hparam('lr', 0.1)
     hparams.add_hparam('weight_decay_rate', 5e-4)

@@ -10,7 +10,7 @@ mnist = input_data.read_data_sets("./data/", one_hot=True)
 
 # Training Parameters
 num_gpus = 1
-num_steps = 200
+num_steps = 200*4
 learning_rate = 0.001
 batch_size = 1024
 display_step = 10

@@ -582,6 +582,7 @@ class CifarModelTrainer(object):
             print("Step " + str(curr_step) + ": Minibatch Loss= " + \
                   "{:.4f}".format(loss) + ", Training Accuracy= " + \
                   "{:.3f}".format(acc) + ", %i Examples/sec" % int(len(train_images) / te) + ", lr: "+ str(curr_lr))
+            print("run time of one iteration: {}".format(te))
 
           if curr_step % steps_per_epoch == 0 or curr_step == total_steps-1:
             curr_epoch = int(curr_step / steps_per_epoch)

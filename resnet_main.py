@@ -561,7 +561,7 @@ class CifarModelTrainer(object):
       test_accuracy_list = []
       steps_per_epoch = int(hparams.train_size / (hparams.batch_size * FLAGS.num_gpus))
       # total_steps = hparams.num_epochs * steps_per_epoch
-      total_steps = 200
+      total_steps = 10
       init = tf.group(tf.global_variables_initializer(), tf.local_variables_initializer())
       with tf.Session() as session:
         session.run(init)

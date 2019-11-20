@@ -561,8 +561,6 @@ class CifarModelTrainer(object):
       test_accuracy_list = []
       steps_per_epoch = int(hparams.train_size / (hparams.batch_size * FLAGS.num_gpus))
       total_steps = hparams.num_epochs * steps_per_epoch
-      tf.logging.info('Steps per epoch: {}'.format(steps_per_epoch))
-      tf.logging.info("Total_steps {}".format(total_steps))
 
       init = tf.group(tf.global_variables_initializer(), tf.local_variables_initializer())
       with tf.Session() as session:
@@ -591,6 +589,8 @@ class CifarModelTrainer(object):
 
             num_trainable_params = np.sum([np.prod(var.get_shape().as_list()) for var in tf.trainable_variables()])
             print('number of trainable params: {}'.format(num_trainable_params))
+            print('Steps per epoch: {}'.format(steps_per_epoch))
+            print("Total_steps {}".format(total_steps))
 
             test_accuracy_per_epoch = np.mean([session.run(accuracy, feed_dict={
               images: self.data_loader.test_images[i:i + hparams.batch_size],

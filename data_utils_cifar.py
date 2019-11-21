@@ -357,17 +357,17 @@ class DataSetCifar(object):
       self.epochs = epoch
     batched_data = (self.train_images[self.curr_train_index: self.curr_train_index + self.hparams.batch_size*num_gpus],
                     self.train_labels[self.curr_train_index: self.curr_train_index + self.hparams.batch_size*num_gpus])
-    final_imgs = []
 
+    final_imgs = []
     images, labels = batched_data
     for data in images:
       epoch_policy = self.good_policies[np.random.choice(len(self.good_policies))]
       final_img = augmentation_transforms.apply_policy(epoch_policy, data)
       final_img = augmentation_transforms.random_flip(augmentation_transforms.zero_pad_and_crop(final_img, 4))
-      # Apply cutout
       final_img = augmentation_transforms.cutout_numpy(final_img)
       final_imgs.append(final_img)
     batched_data = (np.array(final_imgs, np.float32), labels)
+
     self.curr_train_index += self.hparams.batch_size*num_gpus
     return batched_data
 

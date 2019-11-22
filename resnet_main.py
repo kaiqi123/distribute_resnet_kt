@@ -579,13 +579,14 @@ class CifarModelTrainer(object):
           te = time.time() - ts
 
           # if curr_step % 10 == 0 or curr_step == 1:
-          #   loss, acc = session.run([loss_op, accuracy], feed_dict={images: train_images, labels: train_labels})
-          #   print("Step " + str(curr_step) + ": Minibatch Loss= " + \
-          #         "{:.4f}".format(loss) + ", Training Accuracy= " + \
-          #         "{:.3f}".format(acc) + ", %i Examples/sec" % int(len(train_images) / te) + ", lr: "+ str(curr_lr))
-          #   print("run time of one iteration: {}".format(te))
+          if curr_step % steps_per_epoch == 0 or curr_step == total_steps - 1:
+            loss, acc = session.run([loss_op, accuracy], feed_dict={images: train_images, labels: train_labels})
+            print("Step " + str(curr_step) + ": Minibatch Loss= " + \
+                  "{:.4f}".format(loss) + ", Training Accuracy= " + \
+                  "{:.3f}".format(acc) + ", %i Examples/sec" % int(len(train_images) / te) + ", lr: "+ str(curr_lr))
+            print("run time of one iteration: {}".format(te))
 
-          if curr_step % steps_per_epoch == 0 or curr_step == total_steps-1:
+          # if curr_step % steps_per_epoch == 0 or curr_step == total_steps-1:
           #   curr_epoch = int(curr_step / steps_per_epoch)
           #   tf.logging.info("curr_step: {}, curr_epoch: {}, lr: {}".format(curr_step, curr_epoch, curr_lr))
 

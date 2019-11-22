@@ -101,6 +101,8 @@ def build_model(inputs, num_classes, is_training, hparams, type, teacher_model=N
         logits, output_dict = wrn_student_comparedMethod.build_wrn_model_student(inputs, num_classes, wrn_size=16*1, num_blocks_per_resnet=2)
       elif hparams.model_name == 'independentStudent_wrn_w2d16':
         logits, output_dict = wrn_student_comparedMethod.build_wrn_model_student(inputs, num_classes, wrn_size=16*2, num_blocks_per_resnet=2)
+      elif hparams.model_name == 'teacher_wrn_w2d40':
+        logits, output_dict = build_wrn_model_teacher(inputs, num_classes, wrn_size=16 * 2, num_blocks_per_resnet=6)
 
     elif type == "dependent_student":
       if hparams.model_name == 'dependentStudent_wrn_w10d10':
